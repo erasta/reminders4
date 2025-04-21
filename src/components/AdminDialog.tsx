@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getAllUsers, getRemindersDueToday } from '../app/actions';
-import { sendTestEmail } from '../server/email';
+import UsersList from './admin/UsersList';
+import RemindersList from './admin/RemindersList';
 
 type User = {
   id: string;
@@ -47,7 +48,6 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reminderError, setReminderError] = useState<string | null>(null);
-  const [sendingEmails, setSendingEmails] = useState<Record<string, boolean>>({});
 
   // Add event listener for escape key
   useEffect(() => {
@@ -110,16 +110,6 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
     }
   }, [isOpen]);
 
-  const handleSendTestEmail = async (userEmail: string) => {
-    setSendingEmails(prev => ({ ...prev, [userEmail]: true }));
-    
-    try {
-      await sendTestEmail(userEmail);
-    } finally {
-      setSendingEmails(prev => ({ ...prev, [userEmail]: false }));
-    }
-  };
-
   if (!isOpen) return null;
 
   // Show unauthorized message if not an admin
@@ -175,88 +165,8 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
           <div className="text-red-500 text-center p-4">{error}</div>
         ) : (
           <div className="overflow-auto flex-grow">
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Users</h3>
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(user.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button
-                          onClick={() => handleSendTestEmail(user.email)}
-                          disabled={sendingEmails[user.email]}
-                          className={`px-3 py-1 rounded ${
-                            sendingEmails[user.email]
-                              ? 'bg-gray-300 cursor-not-allowed'
-                              : 'bg-blue-500 hover:bg-blue-600 text-white'
-                          }`}
-                        >
-                          {sendingEmails[user.email] ? 'Sending...' : 'Send Test Email'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Reminders Due Today</h3>
-              {reminderError ? (
-                <div className="text-red-500 p-4 bg-red-50 rounded-md">
-                  <p className="font-medium">Error loading reminders:</p>
-                  <p className="text-sm mt-1">{reminderError}</p>
-                </div>
-              ) : reminders.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No reminders are due today.</p>
-              ) : (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Reminder</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {reminders.map((reminder) => (
-                      <tr key={reminder.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {reminder.user_email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {reminder.company_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(reminder.last_reminder_date)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {reminder.days_between_reminders}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(reminder.date_due)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+            <UsersList users={users} />
+            <RemindersList reminders={reminders} error={reminderError} />
           </div>
         )}
       </div>
