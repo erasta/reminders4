@@ -4,11 +4,11 @@ import CompanySelect from './CompanySelect';
 import DaysInput from './DaysInput';
 import CompanyUserIdInput from './CompanyUserIdInput';
 import LastReminderDateInput from './LastReminderDateInput';
-import { Company, Reminder } from '@/types/reminder';
+import { Company } from '@/types/reminder';
 
 interface AddReminderProps {
   companies: Company[];
-  onReminderAdded: (newReminder: Reminder) => void;
+  onReminderAdded: (newReminder: any) => void;
   onError: (error: string) => void;
 }
 
@@ -22,6 +22,7 @@ export default function AddReminder({ companies, onReminderAdded, onError }: Add
 
   // Update days when company is selected
   useEffect(() => {
+    console.log('AddReminder - company:', selectedCompany);
     if (selectedCompany) {
       const company = companies.find(c => c.id === selectedCompany);
       if (company) {
@@ -43,6 +44,14 @@ export default function AddReminder({ companies, onReminderAdded, onError }: Add
 
   // Compute isDaysEditable based on company's default days
   const isDaysEditable = selectedCompany !== '' && companies.find(c => c.id === selectedCompany)?.days_before_deactivation === 0;
+  
+  // Add console logs for debugging - these will run on every render
+  console.log('AddReminder - isDaysEditable:', isDaysEditable);
+  console.log('AddReminder - selectedCompany:', selectedCompany);
+  if (selectedCompany) {
+    const company = companies.find(c => c.id === selectedCompany);
+    console.log('AddReminder - selected company days:', company?.days_before_deactivation);
+  }
 
   // Add a new reminder
   const handleAddReminder = async (e: React.FormEvent) => {
