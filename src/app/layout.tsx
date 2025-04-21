@@ -6,8 +6,8 @@ import Providers from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Next.js App with Google Auth",
-  description: "A Next.js app with Google authentication",
+  title: "Reminders",
+  description: "Track your account deactivation reminders",
 };
 
 export default function RootLayout({

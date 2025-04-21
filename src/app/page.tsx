@@ -3,10 +3,12 @@ import ReminderManager from "@/components/ReminderManager";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-8">Company Reminders</h1>
-        <LoginButton />
+    <main className="min-h-screen p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Reminders</h1>
+          <LoginButton />
+        </div>
         <ReminderManager />
       </div>
     </main>

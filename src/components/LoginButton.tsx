@@ -7,14 +7,14 @@ export default function LoginButton() {
 
   if (session) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <p className="text-xl">Welcome, {session.user?.name}!</p>
+      <div className="flex flex-col items-end">
         <button
           onClick={() => signOut()}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
         >
           Sign Out
         </button>
+        <p className="text-sm text-gray-600 mt-1">{session.user?.name}</p>
       </div>
     );
   }
