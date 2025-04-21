@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllUsers, getRemindersDueToday } from '../app/actions';
+import { getAllUsers, getRemindersDueToday, checkIsAdmin } from '../app/actions';
+import { useSession } from 'next-auth/react';
 
 type User = {
   id: string;
@@ -40,11 +41,13 @@ function formatDate(dateString: string | Date): string {
 }
 
 export default function AdminDialog({ isOpen, onClose }: AdminDialogProps) {
+  const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reminderError, setReminderError] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Add event listener for escape key
   useEffect(() => {
@@ -63,51 +66,104 @@ export default function AdminDialog({ isOpen, onClose }: AdminDialogProps) {
     };
   }, [isOpen, onClose]);
 
+  // Verify admin status when dialog opens
   useEffect(() => {
-    if (isOpen) {
-      async function fetchData() {
+    async function verifyAdminStatus() {
+      if (isOpen && session?.user?.email) {
         setLoading(true);
-        setError(null);
-        setReminderError(null);
         try {
-          // Fetch users
-          const usersResult = await getAllUsers();
-          if (usersResult.error) {
-            setError(usersResult.error);
-          } else if (usersResult.users) {
-            setUsers(usersResult.users as User[]);
-          } else {
-            setUsers([]);
-          }
+          const adminStatus = await checkIsAdmin();
+          setIsAuthorized(adminStatus);
           
-          // Fetch reminders due today
-          try {
-            const remindersResult = await getRemindersDueToday();
-            if (remindersResult.error) {
-              setReminderError(remindersResult.error);
-              console.error('Error fetching reminders:', remindersResult.error);
-            } else if (remindersResult.reminders) {
-              setReminders(remindersResult.reminders as Reminder[]);
-            } else {
-              setReminders([]);
-            }
-          } catch (reminderErr) {
-            setReminderError('Failed to fetch reminders: ' + (reminderErr instanceof Error ? reminderErr.message : String(reminderErr)));
-            console.error('Exception fetching reminders:', reminderErr);
+          if (adminStatus) {
+            // Only fetch data if user is authorized
+            await fetchData();
+          } else {
+            setError('You are not authorized to view this content.');
+            setLoading(false);
           }
         } catch (err) {
-          setError('Failed to fetch data: ' + (err instanceof Error ? err.message : String(err)));
-          console.error(err);
-        } finally {
+          setError('Failed to verify admin status: ' + (err instanceof Error ? err.message : String(err)));
           setLoading(false);
         }
+      } else {
+        setIsAuthorized(false);
+        setLoading(false);
       }
-      
-      fetchData();
     }
-  }, [isOpen]);
+
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      setReminderError(null);
+      try {
+        // Fetch users
+        const usersResult = await getAllUsers();
+        if (usersResult.error) {
+          setError(usersResult.error);
+        } else if (usersResult.users) {
+          setUsers(usersResult.users as User[]);
+        } else {
+          setUsers([]);
+        }
+        
+        // Fetch reminders due today
+        try {
+          const remindersResult = await getRemindersDueToday();
+          if (remindersResult.error) {
+            setReminderError(remindersResult.error);
+            console.error('Error fetching reminders:', remindersResult.error);
+          } else if (remindersResult.reminders) {
+            setReminders(remindersResult.reminders as Reminder[]);
+          } else {
+            setReminders([]);
+          }
+        } catch (reminderErr) {
+          setReminderError('Failed to fetch reminders: ' + (reminderErr instanceof Error ? reminderErr.message : String(reminderErr)));
+          console.error('Exception fetching reminders:', reminderErr);
+        }
+      } catch (err) {
+        setError('Failed to fetch data: ' + (err instanceof Error ? err.message : String(err)));
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    verifyAdminStatus();
+  }, [isOpen, session]);
 
   if (!isOpen) return null;
+
+  // Show unauthorized message if not an admin
+  if (!isAuthorized) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-red-600">Access Denied</h2>
+            <button 
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-gray-700">You do not have permission to access the admin dashboard.</p>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={onClose}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

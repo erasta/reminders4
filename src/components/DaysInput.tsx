@@ -9,7 +9,6 @@ export default function DaysInput({
   onDaysChange,
   disabled = false 
 }: DaysInputProps) {
-  console.log('DaysInput disabled:', disabled);
   return (
     <div className="grid grid-cols-3 gap-4 items-center">
       <label htmlFor="days" className="font-medium">Days between reminders:</label>
