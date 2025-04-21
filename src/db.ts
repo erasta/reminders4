@@ -121,8 +121,8 @@ export async function addReminder({ userEmail, companyId, companyName, companyUs
     const userId = await ensureUserExists(userEmail);
     
     const result = await sql<Reminder>`
-      INSERT INTO reminders (user_id, company_id, company_name, company_user_id, days_between_reminders)
-      VALUES (${userId}, ${companyId}, ${companyName}, ${companyUserId || null}, ${daysBetweenReminders})
+      INSERT INTO reminders (user_id, company_id, company_name, company_user_id, days_between_reminders, last_reminder_date)
+      VALUES (${userId}, ${companyId}, ${companyName}, ${companyUserId}, ${daysBetweenReminders}, CURRENT_TIMESTAMP)
       RETURNING 
         id,
         user_id as "userId",

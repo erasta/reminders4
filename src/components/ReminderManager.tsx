@@ -78,7 +78,7 @@ export default function ReminderManager() {
   // Add a new reminder
   const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCompany || !daysBetweenReminders) return;
+    if (!selectedCompany || !daysBetweenReminders || !companyUserId.trim()) return;
 
     // Find the selected company to get its name
     const selectedCompanyData = companies.find(company => company.id === selectedCompany);
@@ -99,7 +99,7 @@ export default function ReminderManager() {
         body: JSON.stringify({ 
           companyId: selectedCompany,
           companyName: selectedCompanyData.name,
-          companyUserId: companyUserId.trim() || undefined,
+          companyUserId: companyUserId.trim(),
           daysBetweenReminders: daysBetweenReminders
         }),
       });
@@ -190,8 +190,9 @@ export default function ReminderManager() {
               type="text"
               value={companyUserId}
               onChange={(e) => setCompanyUserId(e.target.value)}
-              placeholder="Your ID/account number with the company (optional)"
+              placeholder="Your ID/account number with the company"
               className="w-full p-2 border rounded"
+              required
             />
           </div>
           <button

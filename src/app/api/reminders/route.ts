@@ -26,8 +26,8 @@ export async function POST(request: Request) {
     }
 
     const { companyId, companyName, companyUserId, daysBetweenReminders } = await request.json();
-    if (!companyId || !companyName || !daysBetweenReminders) {
-      return NextResponse.json({ error: 'Company ID, company name, and days between reminders are required' }, { status: 400 });
+    if (!companyId || !companyName || !daysBetweenReminders || !companyUserId) {
+      return NextResponse.json({ error: 'Company ID, company name, company user ID, and days between reminders are required' }, { status: 400 });
     }
 
     // Ensure companyId is a string
