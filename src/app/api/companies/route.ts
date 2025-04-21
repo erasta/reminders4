@@ -5,6 +5,15 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 
+// Define interface for CSV record
+interface CompanyRecord {
+  company_id: string;
+  company_name: string;
+  days_before_deactivation: string;
+  link_to_policy?: string;
+  activities_to_avoid_deactivation?: string;
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -22,7 +31,7 @@ export async function GET() {
     });
 
     // Transform the data to match our expected format
-    const companies = records.map((record: any) => ({
+    const companies = records.map((record: CompanyRecord) => ({
       id: record.company_id,
       name: record.company_name,
       days_before_deactivation: parseInt(record.days_before_deactivation) || 0,
