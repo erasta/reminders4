@@ -1,7 +1,6 @@
 'use client';
 
 import { sendAllReminders } from '../../server/sendAllReminders';
-import { showAlert } from '../../lib/alerts';
 
 type Reminder = {
   id: string;
@@ -34,8 +33,8 @@ type RemindersListProps = {
 };
 
 export default function RemindersList({ reminders, error }: RemindersListProps) {
-  const handleSendReminders = () => {
-    sendAllReminders();
+  const handleSendReminders = async () => {
+    await sendAllReminders();
   };
 
   return (
