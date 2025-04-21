@@ -124,30 +124,23 @@ export default function ReminderManager() {
     }
   };
 
-  // Mark a reminder as completed
-  const handleCompleteReminder = async (reminderId: string) => {
+  // Delete a reminder
+  const handleDeleteReminder = async (reminderId: string) => {
     try {
-      const response = await fetch('/api/reminders', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reminderId }),
+      const response = await fetch(`/api/reminders?id=${reminderId}`, {
+        method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update reminder');
+        throw new Error('Failed to delete reminder');
       }
 
-      const updatedReminder = await response.json();
       setReminders(prevReminders => 
-        prevReminders.map(reminder => 
-          reminder.id === reminderId ? updatedReminder : reminder
-        )
+        prevReminders.filter(reminder => reminder.id !== reminderId)
       );
     } catch (error) {
-      console.error('Error updating reminder:', error);
-      setError('Failed to update reminder');
+      console.error('Error deleting reminder:', error);
+      setError('Failed to delete reminder');
     }
   };
 
@@ -203,8 +196,8 @@ export default function ReminderManager() {
           </div>
           <button
             type="submit"
-            disabled={isLoading || !selectedCompany}
-            className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+            disabled={isLoading}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300"
           >
             {isLoading ? 'Adding...' : 'Add Reminder'}
           </button>
@@ -220,35 +213,27 @@ export default function ReminderManager() {
           </p>
         ) : (
           reminders.map((reminder) => (
-            <div
-              key={reminder.id}
-              className="p-4 border rounded bg-white shadow-sm"
-            >
+            <div key={reminder.id} className="bg-white p-4 rounded-lg shadow">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium">{reminder.companyName}</h3>
-                  {reminder.companyUserId && (
-                    <p className="text-sm text-gray-600">
-                      Your ID: {reminder.companyUserId}
-                    </p>
-                  )}
+                  <h3 className="text-lg font-semibold">{reminder.companyName}</h3>
                   <p className="text-gray-600">
-                    Remind every {reminder.daysBetweenReminders} days
+                    Days between reminders: {reminder.daysBetweenReminders}
                   </p>
-                  {reminder.lastReminderDate && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Last reminded: {new Date(reminder.lastReminderDate).toLocaleString()}
+                  <p className="text-gray-600">
+                    Last reminder: {reminder.lastReminderDate ? new Date(reminder.lastReminderDate).toLocaleDateString() : 'Never'}
+                  </p>
+                  {reminder.companyUserId && (
+                    <p className="text-gray-600">
+                      Company User ID: {reminder.companyUserId}
                     </p>
                   )}
-                  <p className="text-sm text-gray-500 mt-1">
-                    Created: {new Date(reminder.createdAt).toLocaleString()}
-                  </p>
                 </div>
                 <button
-                  onClick={() => handleCompleteReminder(reminder.id)}
-                  className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                  onClick={() => handleDeleteReminder(reminder.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
                 >
-                  Mark Complete
+                  Delete
                 </button>
               </div>
             </div>

@@ -166,4 +166,13 @@ export async function updateLastReminderDate(reminderId: string) {
     console.error('Database Error:', error);
     throw new Error('Failed to update reminder.');
   }
+}
+
+export async function deleteReminder(reminderId: string): Promise<void> {
+  try {
+    await sql`DELETE FROM reminders WHERE id = ${reminderId}`;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to delete reminder.');
+  }
 } 
