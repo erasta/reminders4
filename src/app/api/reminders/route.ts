@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getReminders, addReminder, updateLastReminderDate, deleteReminder } from '@/db';
+import { getReminders, addReminder, updateLastReminderDate, deleteReminder, updateReminder } from '@/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/auth';
 
@@ -94,5 +94,29 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error('Error deleting reminder:', error);
     return NextResponse.json({ error: 'Failed to delete reminder' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { reminderId, companyUserId, daysBetweenReminders } = await request.json();
+  if (!reminderId || !companyUserId || !daysBetweenReminders) {
+    return NextResponse.json({ error: 'Reminder ID, company user ID, and days between reminders are required' }, { status: 400 });
+  }
+
+  try {
+    const updatedReminder = await updateReminder({
+      reminderId,
+      companyUserId,
+      daysBetweenReminders
+    });
+    return NextResponse.json(updatedReminder);
+  } catch (error) {
+    console.error('Error updating reminder:', error);
+    return NextResponse.json({ error: 'Failed to update reminder' }, { status: 500 });
   }
 } 

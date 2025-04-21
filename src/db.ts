@@ -27,6 +27,12 @@ export type AddReminderParams = {
   daysBetweenReminders: number;
 };
 
+export type UpdateReminderParams = {
+  reminderId: string;
+  companyUserId: string;
+  daysBetweenReminders: number;
+};
+
 export async function getTexts(userEmail: string) {
   noStore();
   try {
@@ -174,5 +180,29 @@ export async function deleteReminder(reminderId: string): Promise<void> {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to delete reminder.');
+  }
+}
+
+export async function updateReminder({ reminderId, companyUserId, daysBetweenReminders }: UpdateReminderParams) {
+  try {
+    const result = await sql<Reminder>`
+      UPDATE reminders 
+      SET company_user_id = ${companyUserId},
+          days_between_reminders = ${daysBetweenReminders}
+      WHERE id = ${reminderId}
+      RETURNING 
+        id,
+        user_id as "userId",
+        company_id as "companyId",
+        company_name as "companyName",
+        company_user_id as "companyUserId",
+        days_between_reminders as "daysBetweenReminders",
+        last_reminder_date as "lastReminderDate",
+        created_at as "createdAt"
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to update reminder.');
   }
 } 

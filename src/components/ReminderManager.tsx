@@ -32,6 +32,7 @@ export default function ReminderManager() {
   const [isDaysEditable, setIsDaysEditable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
 
   // Fetch companies from CSV and reminders from API
   useEffect(() => {
@@ -144,6 +145,64 @@ export default function ReminderManager() {
     }
   };
 
+  // Edit a reminder
+  const handleEditReminder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingReminder || !companyUserId.trim() || !daysBetweenReminders) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/reminders', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reminderId: editingReminder.id,
+          companyUserId: companyUserId.trim(),
+          daysBetweenReminders
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update reminder');
+      }
+
+      const updatedReminder = await response.json();
+      setReminders(prevReminders =>
+        prevReminders.map(reminder =>
+          reminder.id === editingReminder.id ? updatedReminder : reminder
+        )
+      );
+      setEditingReminder(null);
+      setCompanyUserId('');
+      setDaysBetweenReminders(120);
+      setIsDaysEditable(false);
+    } catch (error) {
+      console.error('Error updating reminder:', error);
+      setError('Failed to update reminder');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Start editing a reminder
+  const startEditing = (reminder: Reminder) => {
+    setEditingReminder(reminder);
+    setCompanyUserId(reminder.companyUserId || '');
+    setDaysBetweenReminders(reminder.daysBetweenReminders);
+    setIsDaysEditable(true);
+  };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingReminder(null);
+    setCompanyUserId('');
+    setDaysBetweenReminders(120);
+    setIsDaysEditable(false);
+  };
+
   if (!session) {
     return null;
   }
@@ -156,52 +215,86 @@ export default function ReminderManager() {
         </div>
       )}
 
-      {/* Add Reminder Form */}
+      {/* Add/Edit Reminder Form */}
       <div className="mb-8 p-6 border rounded bg-white shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Add New Reminder</h2>
-        <form onSubmit={handleAddReminder} className="space-y-4">
-          <div className="flex gap-4">
-            <select
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              className="flex-1 p-2 border rounded"
-              required
+        <h2 className="text-xl font-semibold mb-4">
+          {editingReminder ? 'Edit Reminder' : 'Add New Reminder'}
+        </h2>
+        {editingReminder && (
+          <div className="mb-4 p-3 bg-gray-100 rounded">
+            <p className="font-medium">Company: {editingReminder.companyName}</p>
+          </div>
+        )}
+        <form onSubmit={editingReminder ? handleEditReminder : handleAddReminder} className="space-y-4">
+          {!editingReminder && (
+            <div className="grid grid-cols-3 gap-4 items-center">
+              <label htmlFor="company" className="font-medium">Company:</label>
+              <div className="col-span-2">
+                <select
+                  id="company"
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Select a company</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name} ({company.days_before_deactivation || 120} days)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-4 items-center">
+            <label htmlFor="days" className="font-medium">Days between reminders:</label>
+            <div className="col-span-2">
+              <input
+                id="days"
+                type="number"
+                value={daysBetweenReminders}
+                onChange={(e) => setDaysBetweenReminders(parseInt(e.target.value))}
+                placeholder="Days between reminders"
+                min="1"
+                className="w-full p-2 border rounded"
+                required
+                disabled={!isDaysEditable}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 items-center">
+            <label htmlFor="userId" className="font-medium">Company User ID:</label>
+            <div className="col-span-2">
+              <input
+                id="userId"
+                type="text"
+                value={companyUserId}
+                onChange={(e) => setCompanyUserId(e.target.value)}
+                placeholder="Your ID/account number with the company"
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300"
             >
-              <option value="">Select a company</option>
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name} ({company.days_before_deactivation || 120} days)
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              value={daysBetweenReminders}
-              onChange={(e) => setDaysBetweenReminders(parseInt(e.target.value))}
-              placeholder="Days between reminders"
-              min="1"
-              className="w-48 p-2 border rounded"
-              required
-              disabled={!isDaysEditable}
-            />
+              {isLoading ? 'Saving...' : (editingReminder ? 'Save Changes' : 'Add Reminder')}
+            </button>
+            {editingReminder && (
+              <button
+                type="button"
+                onClick={cancelEditing}
+                className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            )}
           </div>
-          <div>
-            <input
-              type="text"
-              value={companyUserId}
-              onChange={(e) => setCompanyUserId(e.target.value)}
-              placeholder="Your ID/account number with the company"
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300"
-          >
-            {isLoading ? 'Adding...' : 'Add Reminder'}
-          </button>
         </form>
       </div>
 
@@ -230,12 +323,20 @@ export default function ReminderManager() {
                     </p>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDeleteReminder(reminder.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEditing(reminder)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteReminder(reminder.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))
