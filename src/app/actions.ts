@@ -3,6 +3,7 @@
 import { getServerSession } from 'next-auth/next';
 import { isAdmin } from '../server/adminUsers';
 import { sql } from '@vercel/postgres';
+import { sendTestEmail } from '../server/email';
 
 /**
  * Check if the current user is an admin
@@ -79,4 +80,6 @@ export async function getRemindersDueToday() {
     console.error('Detailed error fetching reminders due today:', error);
     return { error: 'Failed to fetch reminders due today: ' + (error instanceof Error ? error.message : String(error)) };
   }
-} 
+}
+
+export { sendTestEmail }; 

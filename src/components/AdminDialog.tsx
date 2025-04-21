@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAllUsers, getRemindersDueToday } from '../app/actions';
-import { sendTestEmail } from '../server/emailUtils';
+import { sendTestEmail } from '../server/email';
 
 type User = {
   id: string;
