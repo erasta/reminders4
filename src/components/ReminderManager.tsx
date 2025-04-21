@@ -9,11 +9,10 @@ import { Company, Reminder } from '@/types/reminder';
 
 export default function ReminderManager() {
   const { data: session } = useSession();
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch companies from CSV and reminders from API
   useEffect(() => {

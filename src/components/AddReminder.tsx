@@ -4,11 +4,11 @@ import CompanySelect from './CompanySelect';
 import DaysInput from './DaysInput';
 import CompanyUserIdInput from './CompanyUserIdInput';
 import LastReminderDateInput from './LastReminderDateInput';
-import { Company } from '@/types/reminder';
+import { Company, Reminder } from '@/types/reminder';
 
 interface AddReminderProps {
   companies: Company[];
-  onReminderAdded: (newReminder: any) => void;
+  onReminderAdded: (newReminder: Reminder) => void;
   onError: (error: string) => void;
 }
 

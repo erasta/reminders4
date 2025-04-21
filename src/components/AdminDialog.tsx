@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { getAllUsers, getRemindersDueToday, checkIsAdmin } from '../app/actions';
+import { getAllUsers, getRemindersDueToday } from '../app/actions';
 
 type User = {
   id: string;
