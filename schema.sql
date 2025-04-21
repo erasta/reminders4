@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS reminders (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   company_id TEXT NOT NULL,
   company_name TEXT NOT NULL,
+  company_user_id TEXT,
   days_between_reminders INTEGER NOT NULL,
   last_reminder_date TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

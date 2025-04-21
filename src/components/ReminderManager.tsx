@@ -16,6 +16,7 @@ interface Reminder {
   userId: string;
   companyId: string;
   companyName: string;
+  companyUserId?: string;
   daysBetweenReminders: number;
   lastReminderDate: string | null;
   createdAt: string;
@@ -27,6 +28,7 @@ export default function ReminderManager() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [selectedCompany, setSelectedCompany] = useState('');
   const [daysBetweenReminders, setDaysBetweenReminders] = useState(120);
+  const [companyUserId, setCompanyUserId] = useState('');
   const [isDaysEditable, setIsDaysEditable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +99,7 @@ export default function ReminderManager() {
         body: JSON.stringify({ 
           companyId: selectedCompany,
           companyName: selectedCompanyData.name,
+          companyUserId: companyUserId.trim() || undefined,
           daysBetweenReminders: daysBetweenReminders
         }),
       });
@@ -111,6 +114,7 @@ export default function ReminderManager() {
       setReminders(prevReminders => [responseData, ...prevReminders]);
       setSelectedCompany('');
       setDaysBetweenReminders(120);
+      setCompanyUserId('');
       setIsDaysEditable(false);
     } catch (error) {
       console.error('Error adding reminder:', error);
@@ -188,6 +192,15 @@ export default function ReminderManager() {
               disabled={!isDaysEditable}
             />
           </div>
+          <div>
+            <input
+              type="text"
+              value={companyUserId}
+              onChange={(e) => setCompanyUserId(e.target.value)}
+              placeholder="Your ID/account number with the company (optional)"
+              className="w-full p-2 border rounded"
+            />
+          </div>
           <button
             type="submit"
             disabled={isLoading || !selectedCompany}
@@ -214,6 +227,11 @@ export default function ReminderManager() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-medium">{reminder.companyName}</h3>
+                  {reminder.companyUserId && (
+                    <p className="text-sm text-gray-600">
+                      Your ID: {reminder.companyUserId}
+                    </p>
+                  )}
                   <p className="text-gray-600">
                     Remind every {reminder.daysBetweenReminders} days
                   </p>

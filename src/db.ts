@@ -13,6 +13,7 @@ export type Reminder = {
   userId: string;
   companyId: string;
   companyName: string;
+  companyUserId: string | null;
   daysBetweenReminders: number;
   lastReminderDate: Date | null;
   createdAt: Date;
@@ -22,6 +23,7 @@ export type AddReminderParams = {
   userEmail: string;
   companyId: string;
   companyName: string;
+  companyUserId?: string;
   daysBetweenReminders: number;
 };
 
@@ -69,6 +71,7 @@ export async function getReminders(userEmail: string) {
         r.user_id as "userId",
         r.company_id as "companyId",
         r.company_name as "companyName",
+        r.company_user_id as "companyUserId",
         r.days_between_reminders as "daysBetweenReminders",
         r.last_reminder_date as "lastReminderDate",
         r.created_at as "createdAt"
@@ -110,21 +113,22 @@ export async function ensureUserExists(userEmail: string): Promise<string> {
   }
 }
 
-export async function addReminder({ userEmail, companyId, companyName, daysBetweenReminders }: AddReminderParams) {
+export async function addReminder({ userEmail, companyId, companyName, companyUserId, daysBetweenReminders }: AddReminderParams) {
   try {
-    console.log('Adding reminder to database:', { userEmail, companyId, companyName, daysBetweenReminders });
+    console.log('Adding reminder to database:', { userEmail, companyId, companyName, companyUserId, daysBetweenReminders });
     
     // Ensure user exists and get their ID
     const userId = await ensureUserExists(userEmail);
     
     const result = await sql<Reminder>`
-      INSERT INTO reminders (user_id, company_id, company_name, days_between_reminders)
-      VALUES (${userId}, ${companyId}, ${companyName}, ${daysBetweenReminders})
+      INSERT INTO reminders (user_id, company_id, company_name, company_user_id, days_between_reminders)
+      VALUES (${userId}, ${companyId}, ${companyName}, ${companyUserId || null}, ${daysBetweenReminders})
       RETURNING 
         id,
         user_id as "userId",
         company_id as "companyId",
         company_name as "companyName",
+        company_user_id as "companyUserId",
         days_between_reminders as "daysBetweenReminders",
         last_reminder_date as "lastReminderDate",
         created_at as "createdAt"
@@ -152,6 +156,7 @@ export async function updateLastReminderDate(reminderId: string) {
         user_id as "userId",
         company_id as "companyId",
         company_name as "companyName",
+        company_user_id as "companyUserId",
         days_between_reminders as "daysBetweenReminders",
         last_reminder_date as "lastReminderDate",
         created_at as "createdAt"

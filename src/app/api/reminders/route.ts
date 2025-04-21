@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { companyId, companyName, daysBetweenReminders } = await request.json();
+    const { companyId, companyName, companyUserId, daysBetweenReminders } = await request.json();
     if (!companyId || !companyName || !daysBetweenReminders) {
       return NextResponse.json({ error: 'Company ID, company name, and days between reminders are required' }, { status: 400 });
     }
@@ -33,12 +33,13 @@ export async function POST(request: Request) {
     // Ensure companyId is a string
     const companyIdString = String(companyId);
     
-    console.log('Adding reminder with companyId:', companyIdString, 'companyName:', companyName, 'daysBetweenReminders:', daysBetweenReminders);
+    console.log('Adding reminder with companyId:', companyIdString, 'companyName:', companyName, 'companyUserId:', companyUserId, 'daysBetweenReminders:', daysBetweenReminders);
     
     const newReminder = await addReminder({
       userEmail: session.user.email,
       companyId: companyIdString,
       companyName,
+      companyUserId,
       daysBetweenReminders
     });
     return NextResponse.json(newReminder);
