@@ -5,12 +5,10 @@ import { checkIsAdmin } from '../app/actions';
 import AdminDialog from './AdminDialog';
 
 export default function AdminButton() {
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleClick = async () => {
     const adminStatus = await checkIsAdmin();
-    setIsAdmin(adminStatus);
     if (adminStatus) {
       setIsDialogOpen(true);
     }

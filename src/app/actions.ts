@@ -43,7 +43,7 @@ export async function getRemindersDueToday() {
 
   try {
     // Get today's date in YYYY-MM-DD format
-    const today = new Date().toISOString().split('T')[0];
+    // const today = new Date().toISOString().split('T')[0];
     
     // Query to get reminders due today - using a simpler approach
     const result = await sql.query(
