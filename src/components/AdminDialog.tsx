@@ -46,6 +46,23 @@ export default function AdminDialog({ isOpen, onClose }: AdminDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [reminderError, setReminderError] = useState<string | null>(null);
 
+  // Add event listener for escape key
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen, onClose]);
+
   useEffect(() => {
     if (isOpen) {
       async function fetchData() {

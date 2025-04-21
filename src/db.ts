@@ -25,12 +25,14 @@ export type AddReminderParams = {
   companyName: string;
   companyUserId?: string;
   daysBetweenReminders: number;
+  lastReminderDate?: string;
 };
 
 export type UpdateReminderParams = {
   reminderId: string;
   companyUserId: string;
   daysBetweenReminders: number;
+  lastReminderDate?: string;
 };
 
 export async function getTexts(userEmail: string) {
@@ -119,26 +121,45 @@ export async function ensureUserExists(userEmail: string): Promise<string> {
   }
 }
 
-export async function addReminder({ userEmail, companyId, companyName, companyUserId, daysBetweenReminders }: AddReminderParams) {
+export async function addReminder({ userEmail, companyId, companyName, companyUserId, daysBetweenReminders, lastReminderDate }: AddReminderParams) {
   try {
-    console.log('Adding reminder to database:', { userEmail, companyId, companyName, companyUserId, daysBetweenReminders });
+    console.log('Adding reminder to database:', { userEmail, companyId, companyName, companyUserId, daysBetweenReminders, lastReminderDate });
     
     // Ensure user exists and get their ID
     const userId = await ensureUserExists(userEmail);
     
-    const result = await sql<Reminder>`
-      INSERT INTO reminders (user_id, company_id, company_name, company_user_id, days_between_reminders, last_reminder_date)
-      VALUES (${userId}, ${companyId}, ${companyName}, ${companyUserId}, ${daysBetweenReminders}, CURRENT_TIMESTAMP)
-      RETURNING 
-        id,
-        user_id as "userId",
-        company_id as "companyId",
-        company_name as "companyName",
-        company_user_id as "companyUserId",
-        days_between_reminders as "daysBetweenReminders",
-        last_reminder_date as "lastReminderDate",
-        created_at as "createdAt"
-    `;
+    let query;
+    if (lastReminderDate) {
+      query = sql`
+        INSERT INTO reminders (user_id, company_id, company_name, company_user_id, days_between_reminders, last_reminder_date)
+        VALUES (${userId}, ${companyId}, ${companyName}, ${companyUserId}, ${daysBetweenReminders}, ${lastReminderDate})
+        RETURNING 
+          id,
+          user_id as "userId",
+          company_id as "companyId",
+          company_name as "companyName",
+          company_user_id as "companyUserId",
+          days_between_reminders as "daysBetweenReminders",
+          last_reminder_date as "lastReminderDate",
+          created_at as "createdAt"
+      `;
+    } else {
+      query = sql`
+        INSERT INTO reminders (user_id, company_id, company_name, company_user_id, days_between_reminders, last_reminder_date)
+        VALUES (${userId}, ${companyId}, ${companyName}, ${companyUserId}, ${daysBetweenReminders}, CURRENT_TIMESTAMP)
+        RETURNING 
+          id,
+          user_id as "userId",
+          company_id as "companyId",
+          company_name as "companyName",
+          company_user_id as "companyUserId",
+          days_between_reminders as "daysBetweenReminders",
+          last_reminder_date as "lastReminderDate",
+          created_at as "createdAt"
+      `;
+    }
+    
+    const result = await query;
     
     if (result.rows.length === 0) {
       throw new Error('Failed to create reminder');
@@ -183,23 +204,45 @@ export async function deleteReminder(reminderId: string): Promise<void> {
   }
 }
 
-export async function updateReminder({ reminderId, companyUserId, daysBetweenReminders }: UpdateReminderParams) {
+export async function updateReminder({ reminderId, companyUserId, daysBetweenReminders, lastReminderDate }: UpdateReminderParams) {
   try {
-    const result = await sql<Reminder>`
-      UPDATE reminders 
-      SET company_user_id = ${companyUserId},
-          days_between_reminders = ${daysBetweenReminders}
-      WHERE id = ${reminderId}
-      RETURNING 
-        id,
-        user_id as "userId",
-        company_id as "companyId",
-        company_name as "companyName",
-        company_user_id as "companyUserId",
-        days_between_reminders as "daysBetweenReminders",
-        last_reminder_date as "lastReminderDate",
-        created_at as "createdAt"
-    `;
+    let query;
+    if (lastReminderDate) {
+      query = sql`
+        UPDATE reminders 
+        SET company_user_id = ${companyUserId},
+            days_between_reminders = ${daysBetweenReminders},
+            last_reminder_date = ${lastReminderDate}
+        WHERE id = ${reminderId}
+        RETURNING 
+          id,
+          user_id as "userId",
+          company_id as "companyId",
+          company_name as "companyName",
+          company_user_id as "companyUserId",
+          days_between_reminders as "daysBetweenReminders",
+          last_reminder_date as "lastReminderDate",
+          created_at as "createdAt"
+      `;
+    } else {
+      query = sql`
+        UPDATE reminders 
+        SET company_user_id = ${companyUserId},
+            days_between_reminders = ${daysBetweenReminders}
+        WHERE id = ${reminderId}
+        RETURNING 
+          id,
+          user_id as "userId",
+          company_id as "companyId",
+          company_name as "companyName",
+          company_user_id as "companyUserId",
+          days_between_reminders as "daysBetweenReminders",
+          last_reminder_date as "lastReminderDate",
+          created_at as "createdAt"
+      `;
+    }
+    
+    const result = await query;
     return result.rows[0];
   } catch (error) {
     console.error('Database Error:', error);
