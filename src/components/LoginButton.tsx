@@ -7,12 +7,15 @@ export default function LoginButton() {
 
   if (session) {
     return (
-      <button
-        onClick={() => signOut()}
-        className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-      >
-        Sign Out
-      </button>
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-xl">Welcome, {session.user?.name}!</p>
+        <button
+          onClick={() => signOut()}
+          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Sign Out
+        </button>
+      </div>
     );
   }
 
