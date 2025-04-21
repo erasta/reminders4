@@ -1,27 +1,79 @@
-# Next.js App with Google Authentication
+# Reminders App
 
-A modern Next.js application featuring Google authentication using NextAuth.js.
+A Next.js application for managing account deactivation reminders across different companies. The app helps users track when they need to take action to prevent their accounts from being deactivated due to inactivity.
 
 ## Features
 
-- Google OAuth authentication
-- Modern UI with Tailwind CSS
-- TypeScript support
-- ESLint configuration for code quality
-- Responsive design
+- 🔐 Google Authentication
+- 📅 Reminder Management
+  - Create reminders for different companies
+  - Track last activity date
+  - Customize reminder intervals
+  - Edit and delete reminders
+- 📊 Company Data Management via CSV
+- 🎨 Modern UI with Tailwind CSS
+- 🔒 Secure API Routes
+- 🗄️ PostgreSQL Database
 
-## Prerequisites
+## Architecture
 
-- Node.js 18.x or later
-- npm or yarn
-- Google Cloud Console account for OAuth credentials
+### Tech Stack
+- **Frontend**: Next.js 14+ with React Server Components
+- **Styling**: Tailwind CSS
+- **Authentication**: NextAuth.js with Google Provider
+- **Database**: PostgreSQL
+- **API**: Next.js API Routes
+- **Type Safety**: TypeScript
 
-## Getting Started
+### Project Structure
+```
+reminders4/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── api/               # API Routes
+│   │   │   ├── auth/         # Authentication endpoints
+│   │   │   ├── companies/    # Company data endpoints
+│   │   │   └── reminders/    # Reminder management endpoints
+│   │   ├── layout.tsx        # Root layout
+│   │   └── page.tsx          # Home page
+│   ├── components/            # React Components
+│   │   ├── LoginButton.tsx   # Authentication UI
+│   │   └── ReminderManager.tsx # Main reminder interface
+│   └── db.ts                  # Database utilities
+├── companies.csv              # Company data source
+├── schema.sql                 # Database schema
+└── .env.local                 # Environment variables
+```
+
+### Database Schema
+
+```sql
+CREATE TABLE reminders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL,
+    company_id TEXT NOT NULL,
+    company_name TEXT NOT NULL,
+    company_user_id TEXT,
+    days_between_reminders INTEGER NOT NULL,
+    last_reminder_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### API Routes
+
+- `GET /api/companies`: Fetches company data from CSV file
+- `GET /api/reminders`: Retrieves user's reminders
+- `POST /api/reminders`: Creates a new reminder
+- `PUT /api/reminders`: Updates an existing reminder
+- `DELETE /api/reminders`: Deletes a reminder
+
+## Setup
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd <your-repo-name>
+git clone <repository-url>
+cd reminders4
 ```
 
 2. Install dependencies:
@@ -29,69 +81,67 @@ cd <your-repo-name>
 npm install
 ```
 
-3. Create a `.env.local` file in the root directory with the following variables:
+3. Create a `.env.local` file with the following variables:
 ```env
-GOOGLE_CLIENT_ID=your_client_id_here
-GOOGLE_CLIENT_SECRET=your_client_secret_here
-NEXTAUTH_SECRET=your_random_secret_here
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/reminders
+
+# Authentication
+GOOGLE_ID=your_google_client_id
+GOOGLE_SECRET=your_google_client_secret
 NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
 ```
 
-4. Set up Google OAuth:
-   - Go to [Google Cloud Console](https://console.cloud.google.com)
-   - Create a new project or select an existing one
-   - Enable the Google+ API
-   - Create OAuth 2.0 credentials
-   - Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+4. Set up the database:
+```bash
+# Create database and tables
+psql -U postgres -f schema.sql
+```
 
-5. Run the development server:
+5. Add company data:
+Create a `companies.csv` file in the root directory with the following structure:
+```csv
+company_id,company_name,days_before_deactivation,link_to_policy,activities_to_avoid_deactivation
+```
+
+6. Run the development server:
 ```bash
 npm run dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser
+## Usage
+
+1. Log in using your Google account
+2. Select a company from the dropdown
+3. The days between reminders will be automatically set based on the company's policy
+4. Add your company-specific user ID (optional)
+5. Set the last reminder date
+6. Manage your reminders through the interface
 
 ## Development
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run start`: Start production server
+- `npm run lint`: Run ESLint
 
-## Deployment
+## Security
 
-### Deploying to Vercel
+- All API routes are protected with NextAuth.js
+- Database queries are parameterized to prevent SQL injection
+- Environment variables are used for sensitive data
+- CORS is configured for API routes
+- CSP headers are set for enhanced security
 
-1. Push your code to GitHub
-2. Go to [Vercel](https://vercel.com)
-3. Import your repository
-4. Add environment variables in Vercel dashboard
-5. Deploy!
+## Contributing
 
-### Environment Variables for Production
-
-When deploying to production, update these environment variables:
-```env
-NEXTAUTH_URL=https://your-production-domain.com
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-NEXTAUTH_SECRET=your_random_secret
-```
-
-Don't forget to add your production domain to the authorized redirect URIs in Google Cloud Console:
-```
-https://your-production-domain.com/api/auth/callback/google
-```
-
-## Code Quality
-
-This project uses ESLint with the following configurations:
-- TypeScript support
-- React Hooks rules
-- Unused variables detection
-- Console warnings
-- Debugger statements prevention
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
