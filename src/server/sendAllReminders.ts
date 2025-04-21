@@ -11,6 +11,15 @@ type Reminder = {
   user_email: string;
 };
 
+// Helper function to convert string to title case
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export async function sendAllReminders() {
   const result = await getRemindersDueToday();
   
@@ -34,14 +43,16 @@ export async function sendAllReminders() {
   const messages = Object.entries(remindersByUser)
     .map(([userEmail, userReminders]) => {
       const companyList = userReminders
-        .map(r => `  - ${r.company_name}`)
+        .map(r => `  - ${r.company_name}\n    User ID: ${r.company_user_id || 'Not assigned'}`)
         .join('\n');
       
       const dueDates = userReminders
         .map(r => new Date(r.date_due).toLocaleDateString())
         .join(', ');
       
-      return `Dear ${userEmail.split('@')[0]},\n\n` +
+      const userName = toTitleCase(userEmail.split('@')[0].replace(/[._-]/g, ' '));
+      
+      return `Dear ${userName},\n\n` +
              `This is a reminder that the following companies have reached their due date (${dueDates}):\n\n` +
              `${companyList}\n\n` +
              `Please take necessary action.\n` +
