@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAllUsers, getRemindersDueToday } from '../app/actions';
+import { sendTestEmail } from '../server/emailUtils';
 
 type User = {
   id: string;
@@ -112,13 +113,11 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
   const handleSendTestEmail = async (userEmail: string) => {
     setSendingEmails(prev => ({ ...prev, [userEmail]: true }));
     
-    // Show alert with email details
-    alert(`Test email would be sent to: ${userEmail}\nSubject: Test Email from Reminder App`);
-    
-    // Simulate a delay
-    setTimeout(() => {
+    try {
+      await sendTestEmail(userEmail);
+    } finally {
       setSendingEmails(prev => ({ ...prev, [userEmail]: false }));
-    }, 500);
+    }
   };
 
   if (!isOpen) return null;
