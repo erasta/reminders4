@@ -4,8 +4,6 @@ import { Resend } from 'resend';
 import { getServerSession } from 'next-auth/next';
 import { isAdmin } from './adminUsers';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface EmailOptions {
   to: string;
   subject: string;
@@ -25,6 +23,7 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions): Prom
   console.log('RESEND_API_KEY is set, proceeding with email send');
   
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
       from: 'Reminders App <onboarding@resend.dev>',
       to,
