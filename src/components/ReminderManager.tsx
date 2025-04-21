@@ -28,7 +28,7 @@ export default function ReminderManager() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [selectedCompany, setSelectedCompany] = useState('');
   const [daysBetweenReminders, setDaysBetweenReminders] = useState(120);
-  const [companyUserId, setCompanyUserId] = useState('');
+  const [companyUserId, setCompanyUserId] = useState(session?.user?.email || '');
   const [isDaysEditable, setIsDaysEditable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +77,13 @@ export default function ReminderManager() {
     }
   }, [selectedCompany, companies]);
 
+  // Update companyUserId when session changes
+  useEffect(() => {
+    if (session?.user?.email) {
+      setCompanyUserId(session.user.email);
+    }
+  }, [session]);
+
   // Add a new reminder
   const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,8 +124,9 @@ export default function ReminderManager() {
       setReminders(prevReminders => [responseData, ...prevReminders]);
       setSelectedCompany('');
       setDaysBetweenReminders(120);
-      setCompanyUserId('');
+      setCompanyUserId(session?.user?.email || '');
       setIsDaysEditable(false);
+      setLastReminderDate(new Date().toISOString().split('T')[0]);
     } catch (error) {
       console.error('Error adding reminder:', error);
       setError(error instanceof Error ? error.message : 'Failed to add reminder');
@@ -202,7 +210,7 @@ export default function ReminderManager() {
   // Cancel editing
   const cancelEditing = () => {
     setEditingReminder(null);
-    setCompanyUserId('');
+    setCompanyUserId(session?.user?.email || '');
     setDaysBetweenReminders(120);
     setIsDaysEditable(false);
     setLastReminderDate(new Date().toISOString().split('T')[0]);
