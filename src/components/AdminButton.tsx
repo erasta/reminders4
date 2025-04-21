@@ -49,6 +49,7 @@ export default function AdminButton() {
       <AdminDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
+        isAuthorized={isAdmin}
       />
     </>
   );
