@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { checkIsAdmin } from '../app/actions';
+import UsersDialog from './UsersDialog';
 
 export default function AdminButton() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function checkAdmin() {
@@ -37,11 +39,18 @@ export default function AdminButton() {
   }
 
   return (
-    <button
-      onClick={() => alert(`Hi ${email}`)}
-      className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-    >
-      Admin Action
-    </button>
+    <>
+      <button
+        onClick={() => setIsDialogOpen(true)}
+        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Admin Action
+      </button>
+      
+      <UsersDialog 
+        isOpen={isDialogOpen} 
+        onClose={() => setIsDialogOpen(false)} 
+      />
+    </>
   );
 } 
