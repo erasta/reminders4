@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface Text {
@@ -16,26 +16,26 @@ export default function TextList() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTexts = useCallback(async () => {
-    try {
-      const response = await fetch('/api/texts');
-      if (!response.ok) {
-        throw new Error('Failed to fetch texts');
-      }
-      const data = await response.json();
-      setTexts(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching texts:', error);
-      setError('Failed to load texts');
-      setTexts([]);
-    }
-  }, []);
-
   useEffect(() => {
-    if (session?.user?.email) {
-      fetchTexts();
+    async function fetchTexts() {
+      if (!session?.user?.email) return;
+      
+      try {
+        const response = await fetch('/api/texts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch texts');
+        }
+        const data = await response.json();
+        setTexts(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching texts:', error);
+        setError('Failed to load texts');
+        setTexts([]);
+      }
     }
-  }, [session, fetchTexts]);
+
+    fetchTexts();
+  }, [session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

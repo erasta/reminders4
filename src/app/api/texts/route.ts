@@ -12,7 +12,8 @@ export async function GET() {
 
     const texts = await getTexts(session.user.email);
     return NextResponse.json(texts);
-  } catch (error) {
+  } catch (err) {
+    console.error('Error fetching texts:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -31,7 +32,8 @@ export async function POST(request: Request) {
 
     const newText = await addText(session.user.email, content);
     return NextResponse.json(newText);
-  } catch (error) {
+  } catch (err) {
+    console.error('Error adding text:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 } 
