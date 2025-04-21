@@ -33,6 +33,7 @@ export default function ReminderManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [lastReminderDate, setLastReminderDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Fetch companies from CSV and reminders from API
   useEffect(() => {
@@ -101,7 +102,8 @@ export default function ReminderManager() {
           companyId: selectedCompany,
           companyName: selectedCompanyData.name,
           companyUserId: companyUserId.trim(),
-          daysBetweenReminders: daysBetweenReminders
+          daysBetweenReminders: daysBetweenReminders,
+          lastReminderDate: lastReminderDate
         }),
       });
 
@@ -161,7 +163,8 @@ export default function ReminderManager() {
         body: JSON.stringify({
           reminderId: editingReminder.id,
           companyUserId: companyUserId.trim(),
-          daysBetweenReminders
+          daysBetweenReminders,
+          lastReminderDate
         }),
       });
 
@@ -193,6 +196,7 @@ export default function ReminderManager() {
     setCompanyUserId(reminder.companyUserId || '');
     setDaysBetweenReminders(reminder.daysBetweenReminders);
     setIsDaysEditable(true);
+    setLastReminderDate(reminder.lastReminderDate ? new Date(reminder.lastReminderDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
   };
 
   // Cancel editing
@@ -201,6 +205,7 @@ export default function ReminderManager() {
     setCompanyUserId('');
     setDaysBetweenReminders(120);
     setIsDaysEditable(false);
+    setLastReminderDate(new Date().toISOString().split('T')[0]);
   };
 
   if (!session) {
@@ -272,6 +277,19 @@ export default function ReminderManager() {
                 value={companyUserId}
                 onChange={(e) => setCompanyUserId(e.target.value)}
                 placeholder="Your ID/account number with the company"
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 items-center">
+            <label htmlFor="lastDate" className="font-medium">Last Reminder Date:</label>
+            <div className="col-span-2">
+              <input
+                id="lastDate"
+                type="date"
+                value={lastReminderDate}
+                onChange={(e) => setLastReminderDate(e.target.value)}
                 className="w-full p-2 border rounded"
                 required
               />
