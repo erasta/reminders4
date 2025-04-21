@@ -15,7 +15,6 @@ export default function ReminderManager() {
   const [selectedCompany, setSelectedCompany] = useState('');
   const [daysBetweenReminders, setDaysBetweenReminders] = useState(120);
   const [companyUserId, setCompanyUserId] = useState(session?.user?.email || '');
-  const [isDaysEditable, setIsDaysEditable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
@@ -58,10 +57,15 @@ export default function ReminderManager() {
       if (company) {
         const days = company.days_before_deactivation || 120;
         setDaysBetweenReminders(days);
-        setIsDaysEditable(days === 0);
+        
+        // Debug the issue
+        console.log('Company days:', days, 'Editing:', editingReminder !== null);
       }
+    } else {
+      // Reset to default state when no company is selected
+      setDaysBetweenReminders(120);
     }
-  }, [selectedCompany, companies]);
+  }, [selectedCompany, companies, editingReminder]);
 
   // Update companyUserId when session changes
   useEffect(() => {
@@ -69,6 +73,10 @@ export default function ReminderManager() {
       setCompanyUserId(session.user.email);
     }
   }, [session]);
+
+  // Compute isDaysEditable based on company's default days
+  const isDaysEditable = editingReminder !== null || (selectedCompany !== '' && companies.find(c => c.id === selectedCompany)?.days_before_deactivation === 0);
+  console.log('isDaysEditable:', isDaysEditable);
 
   // Add a new reminder
   const handleAddReminder = async (e: React.FormEvent) => {
@@ -111,7 +119,6 @@ export default function ReminderManager() {
       setSelectedCompany('');
       setDaysBetweenReminders(120);
       setCompanyUserId(session?.user?.email || '');
-      setIsDaysEditable(false);
       setLastReminderDate(new Date().toISOString().split('T')[0]);
     } catch (error) {
       console.error('Error adding reminder:', error);
@@ -173,9 +180,10 @@ export default function ReminderManager() {
         )
       );
       setEditingReminder(null);
+      setSelectedCompany('');
       setCompanyUserId('');
       setDaysBetweenReminders(120);
-      setIsDaysEditable(false);
+      setLastReminderDate(new Date().toISOString().split('T')[0]);
     } catch (error) {
       console.error('Error updating reminder:', error);
       setError('Failed to update reminder');
@@ -187,18 +195,18 @@ export default function ReminderManager() {
   // Start editing a reminder
   const startEditing = (reminder: Reminder) => {
     setEditingReminder(reminder);
+    setSelectedCompany(reminder.companyId);
     setCompanyUserId(reminder.companyUserId || '');
     setDaysBetweenReminders(reminder.daysBetweenReminders);
-    setIsDaysEditable(true);
     setLastReminderDate(reminder.lastReminderDate ? new Date(reminder.lastReminderDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
   };
 
   // Cancel editing
   const cancelEditing = () => {
     setEditingReminder(null);
+    setSelectedCompany('');
     setCompanyUserId(session?.user?.email || '');
     setDaysBetweenReminders(120);
-    setIsDaysEditable(false);
     setLastReminderDate(new Date().toISOString().split('T')[0]);
   };
 
