@@ -1,53 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { checkIsAdmin } from '../app/actions';
-import UsersDialog from './UsersDialog';
+import AdminDialog from './AdminDialog';
 
 export default function AdminButton() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const adminStatus = await checkIsAdmin();
-        setIsAdmin(adminStatus);
-        
-        // Get the email from the session
-        const response = await fetch('/api/auth/session');
-        const data = await response.json();
-        setEmail(data.user?.email || null);
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-      } finally {
-        setLoading(false);
-      }
+  const handleClick = async () => {
+    const adminStatus = await checkIsAdmin();
+    setIsAdmin(adminStatus);
+    if (adminStatus) {
+      setIsDialogOpen(true);
     }
-    
-    checkAdmin();
-  }, []);
-
-  if (loading) {
-    return null; // Don't show anything while loading
-  }
-
-  if (!isAdmin) {
-    return null; // Don't show the button to non-admins
-  }
+  };
 
   return (
     <>
       <button
-        onClick={() => setIsDialogOpen(true)}
-        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+        onClick={handleClick}
+        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
       >
-        Admin Action
+        Admin
       </button>
-      
-      <UsersDialog 
+      <AdminDialog 
         isOpen={isDialogOpen} 
         onClose={() => setIsDialogOpen(false)} 
       />

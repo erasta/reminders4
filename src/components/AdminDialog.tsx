@@ -20,7 +20,7 @@ type Reminder = {
   user_email: string;
 };
 
-type UsersDialogProps = {
+type AdminDialogProps = {
   isOpen: boolean;
   onClose: () => void;
 };
@@ -39,7 +39,7 @@ function formatDate(dateString: string | Date): string {
   }
 }
 
-export default function UsersDialog({ isOpen, onClose }: UsersDialogProps) {
+export default function AdminDialog({ isOpen, onClose }: AdminDialogProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);

@@ -63,10 +63,12 @@ export async function getRemindersDueToday() {
        ORDER BY r.company_name`
     );
     
+    // console.log(result.rows);
     // Calculate the due date in JavaScript for more control
     const remindersWithDueDate = result.rows.map(reminder => {
       const lastReminderDate = new Date(reminder.last_reminder_date);
       const dueDate = new Date(lastReminderDate);
+      // console.log(lastReminderDate, dueDate);
       dueDate.setDate(dueDate.getDate() + reminder.days_between_reminders);
       
       return {
