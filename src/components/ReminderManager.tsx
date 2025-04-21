@@ -26,7 +26,8 @@ export default function ReminderManager() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [selectedCompany, setSelectedCompany] = useState('');
-  const [daysBetweenReminders, setDaysBetweenReminders] = useState(30);
+  const [daysBetweenReminders, setDaysBetweenReminders] = useState(120);
+  const [isDaysEditable, setIsDaysEditable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +60,18 @@ export default function ReminderManager() {
 
     fetchData();
   }, [session]);
+
+  // Update days when company is selected
+  useEffect(() => {
+    if (selectedCompany) {
+      const company = companies.find(c => c.id === selectedCompany);
+      if (company) {
+        const days = company.days_before_deactivation || 120;
+        setDaysBetweenReminders(days);
+        setIsDaysEditable(days === 0);
+      }
+    }
+  }, [selectedCompany, companies]);
 
   // Add a new reminder
   const handleAddReminder = async (e: React.FormEvent) => {
@@ -97,7 +110,8 @@ export default function ReminderManager() {
 
       setReminders(prevReminders => [responseData, ...prevReminders]);
       setSelectedCompany('');
-      setDaysBetweenReminders(30);
+      setDaysBetweenReminders(120);
+      setIsDaysEditable(false);
     } catch (error) {
       console.error('Error adding reminder:', error);
       setError(error instanceof Error ? error.message : 'Failed to add reminder');
@@ -159,7 +173,7 @@ export default function ReminderManager() {
               <option value="">Select a company</option>
               {companies.map((company) => (
                 <option key={company.id} value={company.id}>
-                  {company.name} ({company.days_before_deactivation} days)
+                  {company.name} ({company.days_before_deactivation || 120} days)
                 </option>
               ))}
             </select>
@@ -171,6 +185,7 @@ export default function ReminderManager() {
               min="1"
               className="w-48 p-2 border rounded"
               required
+              disabled={!isDaysEditable}
             />
           </div>
           <button
