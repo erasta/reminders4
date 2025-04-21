@@ -2,25 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-
-interface Company {
-  id: string;
-  name: string;
-  days_before_deactivation: number;
-  link_to_policy: string;
-  activities_to_avoid_deactivation: string;
-}
-
-interface Reminder {
-  id: string;
-  userId: string;
-  companyId: string;
-  companyName: string;
-  companyUserId?: string;
-  daysBetweenReminders: number;
-  lastReminderDate: string | null;
-  createdAt: string;
-}
+import CompanySelect from './CompanySelect';
+import DaysInput from './DaysInput';
+import CompanyUserIdInput from './CompanyUserIdInput';
+import LastReminderDateInput from './LastReminderDateInput';
+import { Company, Reminder } from '@/types/reminder';
 
 export default function ReminderManager() {
   const { data: session } = useSession();
@@ -240,69 +226,25 @@ export default function ReminderManager() {
         )}
         <form onSubmit={editingReminder ? handleEditReminder : handleAddReminder} className="space-y-4">
           {!editingReminder && (
-            <div className="grid grid-cols-3 gap-4 items-center">
-              <label htmlFor="company" className="font-medium">Company:</label>
-              <div className="col-span-2">
-                <select
-                  id="company"
-                  value={selectedCompany}
-                  onChange={(e) => setSelectedCompany(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="">Select a company</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name} ({company.days_before_deactivation || 120} days)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <CompanySelect
+              companies={companies}
+              selectedCompany={selectedCompany}
+              onCompanyChange={setSelectedCompany}
+            />
           )}
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <label htmlFor="days" className="font-medium">Days between reminders:</label>
-            <div className="col-span-2">
-              <input
-                id="days"
-                type="number"
-                value={daysBetweenReminders}
-                onChange={(e) => setDaysBetweenReminders(parseInt(e.target.value))}
-                placeholder="Days between reminders"
-                min="1"
-                className="w-full p-2 border rounded"
-                required
-                disabled={!isDaysEditable}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <label htmlFor="userId" className="font-medium">Company User ID:</label>
-            <div className="col-span-2">
-              <input
-                id="userId"
-                type="text"
-                value={companyUserId}
-                onChange={(e) => setCompanyUserId(e.target.value)}
-                placeholder="Your ID/account number with the company"
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <label htmlFor="lastDate" className="font-medium">Last Reminder Date:</label>
-            <div className="col-span-2">
-              <input
-                id="lastDate"
-                type="date"
-                value={lastReminderDate}
-                onChange={(e) => setLastReminderDate(e.target.value)}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-          </div>
+          <DaysInput
+            days={daysBetweenReminders}
+            onDaysChange={setDaysBetweenReminders}
+            disabled={!isDaysEditable}
+          />
+          <CompanyUserIdInput
+            companyUserId={companyUserId}
+            onCompanyUserIdChange={setCompanyUserId}
+          />
+          <LastReminderDateInput
+            lastReminderDate={lastReminderDate}
+            onLastReminderDateChange={setLastReminderDate}
+          />
           <div className="flex gap-2 pt-2">
             <button
               type="submit"
