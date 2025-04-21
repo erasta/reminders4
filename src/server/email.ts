@@ -26,7 +26,7 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions): Prom
   
   try {
     const result = await resend.emails.send({
-      from: 'Reminders App <reminders@yourdomain.com>',
+      from: 'Reminders App <onboarding@resend.dev>',
       to,
       subject,
       text,
