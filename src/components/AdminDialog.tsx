@@ -28,20 +28,6 @@ type AdminDialogProps = {
   isAuthorized: boolean;
 };
 
-// Helper function to format dates safely
-function formatDate(dateString: string | Date): string {
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString();
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid Date';
-  }
-}
-
 export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDialogProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
