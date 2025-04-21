@@ -1,5 +1,7 @@
 'use client';
 
+import { showAlert } from '../../lib/alerts';
+
 type Reminder = {
   id: string;
   company_id: string;
@@ -31,9 +33,21 @@ type RemindersListProps = {
 };
 
 export default function RemindersList({ reminders, error }: RemindersListProps) {
+  const handleSendReminders = () => {
+    showAlert('Sending reminders to all users...');
+  };
+
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3">Reminders Due Today</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg font-semibold">Reminders Due Today</h3>
+        <button
+          onClick={handleSendReminders}
+          className="px-3 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
+        >
+          Send Reminders
+        </button>
+      </div>
       {error ? (
         <div className="text-red-500 p-4 bg-red-50 rounded-md">
           <p className="font-medium">Error loading reminders:</p>
