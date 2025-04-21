@@ -34,7 +34,12 @@ type RemindersListProps = {
 
 export default function RemindersList({ reminders, error }: RemindersListProps) {
   const handleSendReminders = async () => {
-    await sendAllReminders();
+    try {
+      const userCount = await sendAllReminders();
+      alert(`Reminders sent to ${userCount} users.`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to send reminders');
+    }
   };
 
   return (

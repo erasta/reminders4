@@ -52,12 +52,11 @@ function createUserMessage(userEmail: string, userReminders: Reminder[]): string
          `Your Reminder System`;
 }
 
-export async function sendAllReminders() {
+export async function sendAllReminders(): Promise<number> {
   const result = await getRemindersDueToday();
   
   if (result.error) {
-    alert(`Error fetching reminders: ${result.error}`);
-    return;
+    throw new Error(`Error fetching reminders: ${result.error}`);
   }
 
   const reminders = result.reminders as Reminder[];
@@ -74,5 +73,5 @@ export async function sendAllReminders() {
     });
   }
   
-  alert(`Reminders sent to ${Object.keys(remindersByUser).length} users.`);
+  return Object.keys(remindersByUser).length;
 } 
