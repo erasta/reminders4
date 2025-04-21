@@ -1,4 +1,5 @@
 import { getRemindersDueToday } from '../app/actions';
+import { sendEmail } from './email';
 
 type Reminder = {
   id: string;
@@ -62,10 +63,16 @@ export async function sendAllReminders() {
   const reminders = result.reminders as Reminder[];
   const remindersByUser = groupRemindersByUser(reminders);
 
-  // Format messages by user
-  const messages = Object.entries(remindersByUser)
-    .map(([userEmail, userReminders]) => createUserMessage(userEmail, userReminders))
-    .join('\n\n' + '='.repeat(50) + '\n\n');
+  // Send emails to each user
+  for (const [userEmail, userReminders] of Object.entries(remindersByUser)) {
+    const message = createUserMessage(userEmail, userReminders);
+    await sendEmail({
+      to: userEmail,
+      subject: 'Reminder: Companies Due Today',
+      text: message,
+      html: message.replace(/\n/g, '<br>')
+    });
+  }
   
-  alert(`Preparing to send the following messages:\n\n${messages}`);
+  alert(`Reminders sent to ${Object.keys(remindersByUser).length} users.`);
 } 
