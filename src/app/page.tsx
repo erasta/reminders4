@@ -1,4 +1,5 @@
 import LoginButton from "@/components/LoginButton";
+import TextList from "@/components/TextList";
 
 export default function Home() {
   return (
@@ -6,6 +7,7 @@ export default function Home() {
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-8">Welcome to My App</h1>
         <LoginButton />
+        <TextList />
       </div>
     </main>
   );
