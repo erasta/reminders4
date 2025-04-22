@@ -6,9 +6,11 @@ import { Box, Typography, Paper, Alert, Divider } from '@mui/material';
 import AddReminder from './AddReminder';
 import ReminderList from './ReminderList';
 import { Company, Reminder } from '@/types/reminder';
+import { useLoading } from './LoadingContext';
 
 export default function ReminderManager() {
   const { data: session } = useSession();
+  const { setIsLoading } = useLoading();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +23,7 @@ export default function ReminderManager() {
       if (!session?.user?.email) return;
       
       setLoading(true);
+      setIsLoading(true);
       setError(null);
       
       try {
@@ -44,11 +47,12 @@ export default function ReminderManager() {
         setError('Failed to load data: ' + (error instanceof Error ? error.message : String(error)));
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     }
     
     fetchData();
-  }, [session]);
+  }, [session, setIsLoading]);
 
   const handleReminderAdded = (newReminder: Reminder) => {
     setReminders(prevReminders => [newReminder, ...prevReminders]);
@@ -95,7 +99,7 @@ export default function ReminderManager() {
         </Alert>
       )}
       
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, opacity: loading ? 0.5 : 1, pointerEvents: loading ? 'none' : 'auto' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           {editingReminder ? 'Edit Reminder' : 'Add New Reminder'}
         </Typography>
@@ -110,7 +114,7 @@ export default function ReminderManager() {
 
       <Divider sx={{ my: 4 }} />
 
-      <Box>
+      <Box sx={{ opacity: loading ? 0.5 : 1, pointerEvents: loading ? 'none' : 'auto' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           My Reminders
         </Typography>

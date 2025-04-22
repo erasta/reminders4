@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Providers from "@/components/Providers";
-import AppHeader from "@/components/AppHeader";
 import { Box } from "@mui/material";
+import AppHeader from "@/components/AppHeader";
+import Providers from "@/components/Providers";
+import { LoadingProvider } from "@/components/LoadingContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Reminders",
-  description: "Track your account deactivation reminders",
+  title: "Reminders App",
+  description: "Manage your reminders",
 };
 
 export default function RootLayout({
@@ -21,10 +22,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <AppHeader />
-          <Box component="main" sx={{ p: 3 }}>
-            {children}
-          </Box>
+          <LoadingProvider>
+            <AppHeader />
+            <Box component="main" sx={{ p: 3 }}>
+              {children}
+            </Box>
+          </LoadingProvider>
         </Providers>
       </body>
     </html>
