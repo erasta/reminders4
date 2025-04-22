@@ -10,7 +10,11 @@ import {
   Paper,
   Typography,
   Box,
+  Button,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 
 type User = {
   id: string;
@@ -37,6 +41,27 @@ type UsersListProps = {
 };
 
 export default function UsersList({ users }: UsersListProps) {
+  const handleSendTestEmail = async (email: string) => {
+    try {
+      const response = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send test email');
+      }
+
+      alert('Test email sent successfully');
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      alert(error instanceof Error ? error.message : 'Failed to send test email');
+    }
+  };
+
   return (
     <Box sx={{ mb: 4 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -48,6 +73,7 @@ export default function UsersList({ users }: UsersListProps) {
             <TableRow>
               <TableCell>Email</TableCell>
               <TableCell>Created At</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -55,7 +81,17 @@ export default function UsersList({ users }: UsersListProps) {
               <TableRow key={user.id}>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  {new Date(user.created_at).toLocaleDateString()}
+                  {formatDate(user.created_at)}
+                </TableCell>
+                <TableCell align="right">
+                  <Tooltip title="Send Test Email">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleSendTestEmail(user.email)}
+                    >
+                      <SendIcon />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))}

@@ -187,11 +187,8 @@ export default function AddReminder({
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" sx={{ mb: 3 }}>
-        {editingReminder ? 'Edit Reminder' : 'Add New Reminder'}
-      </Typography>
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <FormControl fullWidth error={!!errors.companyId}>
+        <FormControl fullWidth error={!!errors.companyId} size="small">
           <InputLabel>Company</InputLabel>
           <Select
             value={companyId}
@@ -221,6 +218,7 @@ export default function AddReminder({
           required
           error={!!errors.companyUserId}
           helperText={errors.companyUserId}
+          size="small"
         />
 
         <TextField
@@ -233,6 +231,7 @@ export default function AddReminder({
           inputProps={{ min: 1 }}
           disabled={isDaysFieldDisabled}
           helperText={isDaysFieldDisabled ? "Days are fixed by company policy" : undefined}
+          size="small"
         />
 
         <TextField
@@ -244,6 +243,7 @@ export default function AddReminder({
           InputLabelProps={{
             shrink: true,
           }}
+          size="small"
         />
 
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
@@ -253,6 +253,7 @@ export default function AddReminder({
             color="primary"
             disabled={isSubmitting}
             sx={{ flex: 1 }}
+            size="small"
           >
             {isSubmitting ? 'Saving...' : editingReminder ? 'Save Changes' : 'Add Reminder'}
           </Button>
@@ -262,6 +263,7 @@ export default function AddReminder({
               variant="outlined"
               onClick={handleCancel}
               disabled={isSubmitting}
+              size="small"
             >
               Cancel
             </Button>
