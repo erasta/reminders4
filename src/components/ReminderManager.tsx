@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { Box, Typography, Paper, Alert, Divider } from '@mui/material';
 import AddReminder from './AddReminder';
 import ReminderList from './ReminderList';
-import LoginButton from './LoginButton';
 import { Company, Reminder } from '@/types/reminder';
 
 export default function ReminderManager() {
@@ -84,7 +83,6 @@ export default function ReminderManager() {
         <Typography variant="h5" sx={{ mb: 2 }}>
           Please sign in to manage your reminders
         </Typography>
-        <LoginButton />
       </Box>
     );
   }

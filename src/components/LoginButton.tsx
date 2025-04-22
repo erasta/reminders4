@@ -23,7 +23,7 @@ export default function LoginButton() {
 
   return (
     <Button
-      variant="contained"
+      variant="outlined"
       color="inherit"
       onClick={() => signIn('google')}
       startIcon={<LoginIcon />}
