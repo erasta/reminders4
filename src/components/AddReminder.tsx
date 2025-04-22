@@ -96,6 +96,7 @@ export default function AddReminder({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    onError(''); // Clear any existing error
     if (!session?.user?.email) {
       onError('You must be signed in to add a reminder');
       return;
@@ -175,12 +176,19 @@ export default function AddReminder({
     }
   };
 
+  const handleCancel = () => {
+    onError(''); // Clear any existing error
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   const isDaysFieldDisabled = Boolean(selectedCompany?.days_before_deactivation && selectedCompany.days_before_deactivation > 0);
 
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" sx={{ mb: 3 }}>
-        Add New Reminder
+        {editingReminder ? 'Edit Reminder' : 'Add New Reminder'}
       </Typography>
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <FormControl fullWidth error={!!errors.companyId}>
@@ -252,7 +260,7 @@ export default function AddReminder({
             <Button
               type="button"
               variant="outlined"
-              onClick={onCancel}
+              onClick={handleCancel}
               disabled={isSubmitting}
             >
               Cancel
