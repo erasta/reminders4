@@ -33,10 +33,12 @@ export default function AddReminder({
 }: AddReminderProps) {
   const { data: session } = useSession();
   const [companyId, setCompanyId] = useState('');
-  const [companyUserId, setCompanyUserId] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companyUserId, setCompanyUserId] = useState(session?.user?.email || '');
   const [daysBetweenReminders, setDaysBetweenReminders] = useState('');
-  const [lastReminderDate, setLastReminderDate] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastReminderDate, setLastReminderDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [errors, setErrors] = useState<{ companyId?: string; companyUserId?: string }>({});
 
@@ -53,7 +55,7 @@ export default function AddReminder({
     if (editingReminder) {
       setCompanyId(editingReminder.companyId);
       setCompanyUserId(editingReminder.companyUserId || '');
-      setDaysBetweenReminders(editingReminder.daysBetweenReminders.toString());
+      setDaysBetweenReminders(editingReminder.daysBetweenReminders?.toString() || '');
       setLastReminderDate(editingReminder.lastReminderDate || '');
       setSelectedCompany(companies.find(c => c.id === editingReminder.companyId) || null);
     }
@@ -62,7 +64,6 @@ export default function AddReminder({
   // Reset form when company changes (only in add mode)
   useEffect(() => {
     if (!editingReminder) {
-      setCompanyUserId('');
       setDaysBetweenReminders('');
       // Don't reset lastReminderDate here as we want to keep today's date
     }
@@ -106,7 +107,7 @@ export default function AddReminder({
       return;
     }
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     try {
       const url = '/api/reminders';
       const method = editingReminder ? 'PUT' : 'POST';
@@ -127,7 +128,7 @@ export default function AddReminder({
           companyId,
           companyName: selectedCompany.name,
           companyUserId: companyUserId.trim(),
-          daysBetweenReminders: parseInt(daysBetweenReminders),
+          daysBetweenReminders: parseInt(daysBetweenReminders.toString()),
           lastReminderDate: lastReminderDate || null,
           userEmail: session.user.email,
         }),
@@ -165,14 +166,14 @@ export default function AddReminder({
       setCompanyId('');
       setCompanyUserId('');
       setDaysBetweenReminders('');
-      setLastReminderDate('');
+      setLastReminderDate(new Date().toISOString().split('T')[0]);
       setSelectedCompany(null);
       setErrors({});
     } catch (error) {
       console.error('Error saving reminder:', error);
       onError(error instanceof Error ? error.message : `Failed to ${editingReminder ? 'update' : 'create'} reminder`);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -229,8 +230,8 @@ export default function AddReminder({
           required
           fullWidth
           inputProps={{ min: 1 }}
-          disabled={isDaysFieldDisabled}
-          helperText={isDaysFieldDisabled ? "Days are fixed by company policy" : undefined}
+          disabled={!companyId || isDaysFieldDisabled}
+          helperText={isDaysFieldDisabled ? "Days are fixed by company policy" : !companyId ? "Select a company first" : undefined}
           size="small"
         />
 
@@ -251,18 +252,18 @@ export default function AddReminder({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={isSubmitting}
+            disabled={isLoading}
             sx={{ flex: 1 }}
             size="small"
           >
-            {isSubmitting ? 'Saving...' : editingReminder ? 'Save Changes' : 'Add Reminder'}
+            {isLoading ? 'Saving...' : editingReminder ? 'Save Changes' : 'Add Reminder'}
           </Button>
           {editingReminder && onCancel && (
             <Button
               type="button"
               variant="outlined"
               onClick={handleCancel}
-              disabled={isSubmitting}
+              disabled={isLoading}
               size="small"
             >
               Cancel
