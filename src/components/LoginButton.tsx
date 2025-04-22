@@ -12,7 +12,7 @@ export default function LoginButton() {
     return (
       <Button
         variant="outlined"
-        color="primary"
+        color="inherit"
         onClick={() => signOut()}
         startIcon={<LogoutIcon />}
       >
@@ -24,7 +24,7 @@ export default function LoginButton() {
   return (
     <Button
       variant="contained"
-      color="primary"
+      color="inherit"
       onClick={() => signIn('google')}
       startIcon={<LoginIcon />}
     >

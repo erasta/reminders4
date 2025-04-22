@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { checkIsAdmin } from '../app/actions';
 import AdminDialog from './AdminDialog';
+import { Button } from '@mui/material';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 export default function AdminButton() {
   const { data: session } = useSession();
@@ -40,12 +42,14 @@ export default function AdminButton() {
 
   return (
     <>
-      <button
+      <Button
+        variant="outlined"
+        color="inherit"
         onClick={handleClick}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+        startIcon={<AdminPanelSettingsIcon />}
       >
         Admin
-      </button>
+      </Button>
       <AdminDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
