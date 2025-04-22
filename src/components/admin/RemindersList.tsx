@@ -1,6 +1,20 @@
 'use client';
 
 import { sendAllReminders } from '../../server/sendAllReminders';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box,
+  Button,
+  Alert,
+} from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 
 type Reminder = {
   id: string;
@@ -43,57 +57,59 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold">Reminders Due Today</h3>
-        <button
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6">
+          Reminders Due Today
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<SendIcon />}
           onClick={handleSendReminders}
-          className="px-3 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
         >
           Send Reminders
-        </button>
-      </div>
+        </Button>
+      </Box>
+
       {error ? (
-        <div className="text-red-500 p-4 bg-red-50 rounded-md">
-          <p className="font-medium">Error loading reminders:</p>
-          <p className="text-sm mt-1">{error}</p>
-        </div>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
       ) : reminders.length === 0 ? (
-        <p className="text-gray-500 text-center py-4">No reminders are due today.</p>
+        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+          No reminders are due today.
+        </Typography>
       ) : (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Reminder</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {reminders.map((reminder) => (
-              <tr key={reminder.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {reminder.user_email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {reminder.company_name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(reminder.last_reminder_date)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {reminder.days_between_reminders}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(reminder.date_due)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>User</TableCell>
+                <TableCell>Company</TableCell>
+                <TableCell>Last Reminder</TableCell>
+                <TableCell>Days</TableCell>
+                <TableCell>Due Date</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {reminders.map((reminder) => (
+                <TableRow key={reminder.id}>
+                  <TableCell>{reminder.user_email}</TableCell>
+                  <TableCell>{reminder.company_name}</TableCell>
+                  <TableCell>
+                    {formatDate(reminder.last_reminder_date)}
+                  </TableCell>
+                  <TableCell>{reminder.days_between_reminders}</TableCell>
+                  <TableCell>
+                    {formatDate(reminder.date_due)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-    </div>
+    </Box>
   );
 } 

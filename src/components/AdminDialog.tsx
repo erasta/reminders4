@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react';
 import { getAllUsers, getRemindersDueToday } from '../app/actions';
 import UsersList from './admin/UsersList';
 import RemindersList from './admin/RemindersList';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  CircularProgress,
+  Alert,
+  Box,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 type User = {
   id: string;
@@ -106,61 +116,52 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
   // Show unauthorized message if not an admin
   if (!isAuthorized) {
     return (
-      <div className="fixed inset-0 bg-black/25 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-red-600">Access Denied</h2>
-            <button 
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-gray-700">You do not have permission to access the admin dashboard.</p>
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={onClose}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
+      <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ color: 'error.main' }}>
+          Access Denied
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="error" sx={{ mt: 2 }}>
+            You do not have permission to access the admin dashboard.
+          </Alert>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/25 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col m-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Admin Dashboard</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
+    <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>
+        Admin Dashboard
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          </div>
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+            <CircularProgress />
+          </Box>
         ) : error ? (
-          <div className="text-red-500 text-center p-4">{error}</div>
+          <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
         ) : (
-          <div className="overflow-auto flex-grow">
+          <Box sx={{ mt: 2 }}>
             <UsersList users={users} />
             <RemindersList reminders={reminders} error={reminderError} />
-          </div>
+          </Box>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 } 

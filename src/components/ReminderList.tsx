@@ -1,17 +1,39 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Typography,
+  Box,
+  Alert,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Reminder } from '@/types/reminder';
 
-interface ReminderListProps {
+type ReminderListProps = {
   reminders: Reminder[];
   onEditReminder: (reminder: Reminder) => void;
   onDeleteReminder: (reminderId: string) => void;
   onError: (error: string) => void;
-}
+};
 
 export default function ReminderList({ reminders, onEditReminder, onDeleteReminder, onError }: ReminderListProps) {
-  // Delete a reminder
-  const handleDeleteReminder = async (reminderId: string) => {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (reminderId: string) => {
+    if (deletingId) return;
+    
+    setDeletingId(reminderId);
     try {
-      const response = await fetch(`/api/reminders?id=${reminderId}`, {
+      const response = await fetch(`/api/reminders/${reminderId}`, {
         method: 'DELETE',
       });
 
@@ -23,52 +45,65 @@ export default function ReminderList({ reminders, onEditReminder, onDeleteRemind
     } catch (error) {
       console.error('Error deleting reminder:', error);
       onError('Failed to delete reminder');
+    } finally {
+      setDeletingId(null);
     }
   };
 
+  if (reminders.length === 0) {
+    return (
+      <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+        No reminders found. Add your first reminder above.
+      </Typography>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold mb-4">Your Reminders</h2>
-      {reminders.length === 0 ? (
-        <p className="text-gray-500 text-center p-4 border rounded bg-white shadow-sm">
-          No reminders yet. Add your first reminder above!
-        </p>
-      ) : (
-        reminders.map((reminder) => (
-          <div key={reminder.id} className="bg-white p-4 rounded-lg shadow">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold">{reminder.companyName}</h3>
-                <p className="text-gray-600">
-                  Days between reminders: {reminder.daysBetweenReminders}
-                </p>
-                <p className="text-gray-600">
-                  Last reminder: {reminder.lastReminderDate ? new Date(reminder.lastReminderDate).toLocaleDateString() : 'Never'}
-                </p>
-                {reminder.companyUserId && (
-                  <p className="text-gray-600">
-                    Company User ID: {reminder.companyUserId}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEditReminder(reminder)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteReminder(reminder.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))
-      )}
-    </div>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Company</TableCell>
+            <TableCell>User ID</TableCell>
+            <TableCell>Days Between</TableCell>
+            <TableCell>Last Reminder</TableCell>
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {reminders.map((reminder) => (
+            <TableRow key={reminder.id}>
+              <TableCell>{reminder.companyName}</TableCell>
+              <TableCell>{reminder.companyUserId || 'Not assigned'}</TableCell>
+              <TableCell>{reminder.daysBetweenReminders}</TableCell>
+              <TableCell>
+                {reminder.lastReminderDate 
+                  ? new Date(reminder.lastReminderDate).toLocaleDateString()
+                  : 'Never'}
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => onEditReminder(reminder)}
+                    color="primary"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDelete(reminder.id)}
+                    disabled={deletingId === reminder.id}
+                    color="error"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 } 

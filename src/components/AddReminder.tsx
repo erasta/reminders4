@@ -1,141 +1,265 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import CompanySelect from './CompanySelect';
-import DaysInput from './DaysInput';
-import CompanyUserIdInput from './CompanyUserIdInput';
-import LastReminderDateInput from './LastReminderDateInput';
+import {
+  Box,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Typography,
+  Paper,
+  Alert,
+} from '@mui/material';
 import { Company, Reminder } from '@/types/reminder';
 
-interface AddReminderProps {
+type AddReminderProps = {
   companies: Company[];
-  onReminderAdded: (newReminder: Reminder) => void;
+  onReminderAdded: (reminder: Reminder) => void;
   onError: (error: string) => void;
-}
+  editingReminder?: Reminder | null;
+  onCancel?: () => void;
+};
 
-export default function AddReminder({ companies, onReminderAdded, onError }: AddReminderProps) {
+export default function AddReminder({ 
+  companies, 
+  onReminderAdded, 
+  onError,
+  editingReminder,
+  onCancel 
+}: AddReminderProps) {
   const { data: session } = useSession();
-  const [selectedCompany, setSelectedCompany] = useState('');
-  const [daysBetweenReminders, setDaysBetweenReminders] = useState(120);
-  const [companyUserId, setCompanyUserId] = useState(session?.user?.email || '');
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastReminderDate, setLastReminderDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [companyId, setCompanyId] = useState('');
+  const [companyUserId, setCompanyUserId] = useState('');
+  const [daysBetweenReminders, setDaysBetweenReminders] = useState('');
+  const [lastReminderDate, setLastReminderDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [errors, setErrors] = useState<{ companyId?: string; companyUserId?: string }>({});
 
-  // Update days when company is selected
+  // Set today's date as default for lastReminderDate
   useEffect(() => {
-    console.log('AddReminder - company:', selectedCompany);
-    if (selectedCompany) {
-      const company = companies.find(c => c.id === selectedCompany);
+    if (!editingReminder && !lastReminderDate) {
+      const today = new Date().toISOString().split('T')[0];
+      setLastReminderDate(today);
+    }
+  }, [editingReminder, lastReminderDate]);
+
+  // Initialize form with editing reminder data
+  useEffect(() => {
+    if (editingReminder) {
+      setCompanyId(editingReminder.companyId);
+      setCompanyUserId(editingReminder.companyUserId || '');
+      setDaysBetweenReminders(editingReminder.daysBetweenReminders.toString());
+      setLastReminderDate(editingReminder.lastReminderDate || '');
+      setSelectedCompany(companies.find(c => c.id === editingReminder.companyId) || null);
+    }
+  }, [editingReminder, companies]);
+
+  // Reset form when company changes (only in add mode)
+  useEffect(() => {
+    if (!editingReminder) {
+      setCompanyUserId('');
+      setDaysBetweenReminders('');
+      // Don't reset lastReminderDate here as we want to keep today's date
+    }
+  }, [companyId, editingReminder]);
+
+  // Update days between reminders when company changes
+  useEffect(() => {
+    if (!editingReminder && companyId) {
+      const company = companies.find(c => c.id === companyId);
+      setSelectedCompany(company || null);
       if (company) {
-        const days = company.days_before_deactivation || 120;
-        setDaysBetweenReminders(days);
+        setDaysBetweenReminders(company.days_before_deactivation?.toString() || '120');
       }
-    } else {
-      // Reset to default state when no company is selected
-      setDaysBetweenReminders(120);
     }
-  }, [selectedCompany, companies]);
+  }, [companyId, companies, editingReminder]);
 
-  // Update companyUserId when session changes
-  useEffect(() => {
-    if (session?.user?.email) {
-      setCompanyUserId(session.user.email);
+  const validateForm = () => {
+    const newErrors: { companyId?: string; companyUserId?: string } = {};
+    
+    if (!companyId) {
+      newErrors.companyId = 'Company is required';
     }
-  }, [session]);
+    
+    if (!companyUserId.trim()) {
+      newErrors.companyUserId = 'Company User ID is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  // Compute isDaysEditable based on company's default days
-  const isDaysEditable = selectedCompany !== '' && companies.find(c => c.id === selectedCompany)?.days_before_deactivation === 0;
-  
-  // Add console logs for debugging - these will run on every render
-  console.log('AddReminder - isDaysEditable:', isDaysEditable);
-  console.log('AddReminder - selectedCompany:', selectedCompany);
-  if (selectedCompany) {
-    const company = companies.find(c => c.id === selectedCompany);
-    console.log('AddReminder - selected company days:', company?.days_before_deactivation);
-  }
-
-  // Add a new reminder
-  const handleAddReminder = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCompany || !daysBetweenReminders || !companyUserId.trim()) return;
-
-    // Find the selected company to get its name
-    const selectedCompanyData = companies.find(company => company.id === selectedCompany);
-    if (!selectedCompanyData) {
-      onError('Selected company not found');
+    if (!session?.user?.email) {
+      onError('You must be signed in to add a reminder');
       return;
     }
 
-    setIsLoading(true);
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      console.log('Adding reminder for company:', selectedCompanyData.name);
-      const response = await fetch('/api/reminders', {
-        method: 'POST',
+      const url = '/api/reminders';
+      const method = editingReminder ? 'PUT' : 'POST';
+      
+      const selectedCompany = companies.find(c => c.id === companyId);
+      if (!selectedCompany) {
+        throw new Error('Selected company not found');
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          companyId: selectedCompany,
-          companyName: selectedCompanyData.name,
+        credentials: 'include',
+        body: JSON.stringify({
+          ...(editingReminder && { reminderId: editingReminder.id }),
+          companyId,
+          companyName: selectedCompany.name,
           companyUserId: companyUserId.trim(),
-          daysBetweenReminders: daysBetweenReminders,
-          lastReminderDate: lastReminderDate
+          daysBetweenReminders: parseInt(daysBetweenReminders),
+          lastReminderDate: lastReminderDate || null,
+          userEmail: session.user.email,
         }),
       });
 
-      const responseData = await response.json();
+      let errorMessage = `Failed to ${editingReminder ? 'update' : 'create'} reminder`;
       
       if (!response.ok) {
-        console.error('Error response:', responseData);
-        throw new Error(responseData.error || responseData.details || 'Failed to add reminder');
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, try to get the text
+          try {
+            const textError = await response.text();
+            errorMessage = textError || errorMessage;
+          } catch (e) {
+            // If we can't get the text either, use the status text
+            errorMessage = response.statusText || errorMessage;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
-      onReminderAdded(responseData);
-      
+      let reminder;
+      try {
+        reminder = await response.json();
+      } catch (e) {
+        throw new Error('Invalid response from server');
+      }
+
+      onReminderAdded(reminder);
+
       // Reset form
-      setSelectedCompany('');
-      setDaysBetweenReminders(120);
-      setCompanyUserId(session?.user?.email || '');
-      setLastReminderDate(new Date().toISOString().split('T')[0]);
+      setCompanyId('');
+      setCompanyUserId('');
+      setDaysBetweenReminders('');
+      setLastReminderDate('');
+      setSelectedCompany(null);
+      setErrors({});
     } catch (error) {
-      console.error('Error adding reminder:', error);
-      onError(error instanceof Error ? error.message : 'Failed to add reminder');
+      console.error('Error saving reminder:', error);
+      onError(error instanceof Error ? error.message : `Failed to ${editingReminder ? 'update' : 'create'} reminder`);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const isDaysFieldDisabled = Boolean(selectedCompany?.days_before_deactivation && selectedCompany.days_before_deactivation > 0);
+
   return (
-    <div className="mb-8 p-6 border rounded bg-white shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Add New Reminder</h2>
-      <form onSubmit={handleAddReminder} className="space-y-4">
-        <CompanySelect
-          companies={companies}
-          selectedCompany={selectedCompany}
-          onCompanyChange={setSelectedCompany}
-        />
-        <DaysInput
-          days={daysBetweenReminders}
-          onDaysChange={setDaysBetweenReminders}
-          disabled={!isDaysEditable}
-        />
-        <CompanyUserIdInput
-          companyUserId={companyUserId}
-          onCompanyUserIdChange={setCompanyUserId}
-        />
-        <LastReminderDateInput
-          lastReminderDate={lastReminderDate}
-          onLastReminderDateChange={setLastReminderDate}
-        />
-        <div className="flex gap-2 pt-2">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300"
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        Add New Reminder
+      </Typography>
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <FormControl fullWidth error={!!errors.companyId}>
+          <InputLabel>Company</InputLabel>
+          <Select
+            value={companyId}
+            label="Company"
+            onChange={(e) => setCompanyId(e.target.value)}
+            required
+            disabled={!!editingReminder}
           >
-            {isLoading ? 'Saving...' : 'Add Reminder'}
-          </button>
-        </div>
-      </form>
-    </div>
+            {companies.map((company) => (
+              <MenuItem key={company.id} value={company.id}>
+                {company.name} ({company.days_before_deactivation || 120} days)
+              </MenuItem>
+            ))}
+          </Select>
+          {errors.companyId && (
+            <Typography color="error" variant="caption" sx={{ mt: 1 }}>
+              {errors.companyId}
+            </Typography>
+          )}
+        </FormControl>
+
+        <TextField
+          label="Company User ID"
+          value={companyUserId}
+          onChange={(e) => setCompanyUserId(e.target.value)}
+          fullWidth
+          required
+          error={!!errors.companyUserId}
+          helperText={errors.companyUserId}
+        />
+
+        <TextField
+          label="Days Between Reminders"
+          type="number"
+          value={daysBetweenReminders}
+          onChange={(e) => setDaysBetweenReminders(e.target.value)}
+          required
+          fullWidth
+          inputProps={{ min: 1 }}
+          disabled={isDaysFieldDisabled}
+          helperText={isDaysFieldDisabled ? "Days are fixed by company policy" : undefined}
+        />
+
+        <TextField
+          label="Last Reminder Date"
+          type="date"
+          value={lastReminderDate}
+          onChange={(e) => setLastReminderDate(e.target.value)}
+          fullWidth
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
+
+        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={isSubmitting}
+            sx={{ flex: 1 }}
+          >
+            {isSubmitting ? 'Saving...' : editingReminder ? 'Save Changes' : 'Add Reminder'}
+          </Button>
+          {editingReminder && onCancel && (
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          )}
+        </Box>
+      </Box>
+    </Paper>
   );
 } 

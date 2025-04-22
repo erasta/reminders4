@@ -2,25 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { Box, Typography, Paper, Alert, Divider } from '@mui/material';
 import AddReminder from './AddReminder';
-import EditReminder from './EditReminder';
 import ReminderList from './ReminderList';
+import LoginButton from './LoginButton';
 import { Company, Reminder } from '@/types/reminder';
 
 export default function ReminderManager() {
   const { data: session } = useSession();
-  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
 
-  // Fetch companies from CSV and reminders from API
+  // Fetch companies and reminders
   useEffect(() => {
     async function fetchData() {
       if (!session?.user?.email) return;
       
+      setLoading(true);
+      setError(null);
+      
       try {
-        // Fetch companies from CSV
+        // Fetch companies
         const companiesResponse = await fetch('/api/companies');
         if (!companiesResponse.ok) {
           throw new Error('Failed to fetch companies');
@@ -37,78 +42,87 @@ export default function ReminderManager() {
         setReminders(Array.isArray(remindersData) ? remindersData : []);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError('Failed to load data');
+        setError('Failed to load data: ' + (error instanceof Error ? error.message : String(error)));
+      } finally {
+        setLoading(false);
       }
     }
-
+    
     fetchData();
   }, [session]);
 
-  // Handle reminder added
   const handleReminderAdded = (newReminder: Reminder) => {
     setReminders(prevReminders => [newReminder, ...prevReminders]);
   };
 
-  // Handle reminder updated
-  const handleReminderUpdated = (updatedReminder: Reminder) => {
-    setReminders(prevReminders =>
-      prevReminders.map(reminder =>
+  const handleReminderEdited = (updatedReminder: Reminder) => {
+    setReminders(prevReminders => 
+      prevReminders.map(reminder => 
         reminder.id === updatedReminder.id ? updatedReminder : reminder
       )
     );
     setEditingReminder(null);
   };
 
-  // Handle reminder deleted
   const handleReminderDeleted = (reminderId: string) => {
     setReminders(prevReminders => 
       prevReminders.filter(reminder => reminder.id !== reminderId)
     );
   };
 
-  // Start editing a reminder
-  const startEditing = (reminder: Reminder) => {
+  const handleEditClick = (reminder: Reminder) => {
     setEditingReminder(reminder);
   };
 
-  // Cancel editing
-  const cancelEditing = () => {
+  const handleCancelEdit = () => {
     setEditingReminder(null);
   };
 
   if (!session) {
-    return null;
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Please sign in to manage your reminders
+        </Typography>
+        <LoginButton />
+      </Box>
+    );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-8">
+    <Paper sx={{ width: '100%', maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
       {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
-        </div>
+        </Alert>
       )}
-
-      {editingReminder ? (
-        <EditReminder
-          reminder={editingReminder}
-          onReminderUpdated={handleReminderUpdated}
-          onCancel={cancelEditing}
+      
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {editingReminder ? 'Edit Reminder' : 'Add New Reminder'}
+        </Typography>
+        <AddReminder 
+          companies={companies} 
+          onReminderAdded={editingReminder ? handleReminderEdited : handleReminderAdded} 
           onError={setError}
+          editingReminder={editingReminder}
+          onCancel={handleCancelEdit}
         />
-      ) : (
-        <AddReminder
-          companies={companies}
-          onReminderAdded={handleReminderAdded}
-          onError={setError}
-        />
-      )}
+      </Box>
 
-      <ReminderList
-        reminders={reminders}
-        onEditReminder={startEditing}
-        onDeleteReminder={handleReminderDeleted}
-        onError={setError}
-      />
-    </div>
+      <Divider sx={{ my: 4 }} />
+
+      <Box>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          My Reminders
+        </Typography>
+        <ReminderList 
+          reminders={reminders} 
+          onEditReminder={handleEditClick} 
+          onDeleteReminder={handleReminderDeleted} 
+          onError={setError} 
+        />
+      </Box>
+    </Paper>
   );
 } 
