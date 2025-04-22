@@ -71,14 +71,19 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
           
           // Fetch reminders due today
           try {
-            const remindersResult = await getRemindersDueToday();
-            if (remindersResult.error) {
-              setReminderError(remindersResult.error);
-              console.error('Error fetching reminders:', remindersResult.error);
-            } else if (remindersResult.reminders) {
-              setReminders(remindersResult.reminders as Reminder[]);
-            } else {
+            if (!isAuthorized) {
+              setReminderError('Unauthorized');
               setReminders([]);
+            } else {
+              const remindersResult = await getRemindersDueToday();
+              if (remindersResult.error) {
+                setReminderError(remindersResult.error);
+                console.error('Error fetching reminders:', remindersResult.error);
+              } else if (remindersResult.reminders) {
+                setReminders(remindersResult.reminders as Reminder[]);
+              } else {
+                setReminders([]);
+              }
             }
           } catch (reminderErr) {
             setReminderError('Failed to fetch reminders: ' + (reminderErr instanceof Error ? reminderErr.message : String(reminderErr)));
@@ -94,7 +99,7 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
       
       fetchData();
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthorized]);
 
   if (!isOpen) return null;
 
