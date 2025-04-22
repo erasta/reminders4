@@ -24,7 +24,7 @@ export default function RootLayout({
         <Providers>
           <LoadingProvider>
             <AppHeader />
-            <Box component="main" sx={{ p: 3 }}>
+            <Box component="main" sx={{ p: 2 }}>
               {children}
             </Box>
           </LoadingProvider>
