@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./api/auth/[...nextauth]/auth";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  await getServerSession(authOptions);
 
   return (
     <main className="min-h-screen">

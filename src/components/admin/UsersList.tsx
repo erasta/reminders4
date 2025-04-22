@@ -10,7 +10,6 @@ import {
   Paper,
   Typography,
   Box,
-  Button,
   IconButton,
   Tooltip,
 } from '@mui/material';

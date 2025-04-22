@@ -12,7 +12,6 @@ import {
   MenuItem,
   Typography,
   Paper,
-  Alert,
 } from '@mui/material';
 import { Company, Reminder } from '@/types/reminder';
 
@@ -33,12 +32,10 @@ export default function AddReminder({
 }: AddReminderProps) {
   const { data: session } = useSession();
   const [companyId, setCompanyId] = useState('');
-  const [companyName, setCompanyName] = useState('');
   const [companyUserId, setCompanyUserId] = useState(session?.user?.email || '');
   const [daysBetweenReminders, setDaysBetweenReminders] = useState('');
   const [lastReminderDate, setLastReminderDate] = useState(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [errors, setErrors] = useState<{ companyId?: string; companyUserId?: string }>({});
 
@@ -140,12 +137,12 @@ export default function AddReminder({
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
-        } catch (e) {
+        } catch {
           // If response is not JSON, try to get the text
           try {
             const textError = await response.text();
             errorMessage = textError || errorMessage;
-          } catch (e) {
+          } catch {
             // If we can't get the text either, use the status text
             errorMessage = response.statusText || errorMessage;
           }
@@ -156,7 +153,7 @@ export default function AddReminder({
       let reminder;
       try {
         reminder = await response.json();
-      } catch (e) {
+      } catch {
         throw new Error('Invalid response from server');
       }
 
