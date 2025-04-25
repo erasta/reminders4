@@ -16,11 +16,19 @@ interface EmailOptions {
   html: string;
 }
 
-interface SendGridError extends Error {
-  response?: {
-    body: any;
-    headers: any;
+interface SendGridErrorResponse {
+  body: {
+    errors: Array<{
+      message: string;
+      field: string;
+      help: string;
+    }>;
   };
+  headers: Record<string, string>;
+}
+
+interface SendGridError extends Error {
+  response?: SendGridErrorResponse;
 }
 
 export async function sendEmail({ to, subject, text, html }: EmailOptions) {
