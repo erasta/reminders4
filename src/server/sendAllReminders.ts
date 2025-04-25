@@ -1,5 +1,7 @@
+'use server';
+
 import { getRemindersDueToday } from '../app/actions';
-import { sendEmail } from './email';
+import { sendEmail } from './sendgridUtils';
 
 type Reminder = {
   id: string;
