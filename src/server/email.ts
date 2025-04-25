@@ -1,65 +1,34 @@
 'use server';
 
-import { Resend } from 'resend';
+import { sendEmail } from './sendgridUtils';
 import { getServerSession } from 'next-auth/next';
 import { isAdmin } from './adminUsers';
 
-interface EmailOptions {
-  to: string;
-  subject: string;
-  text: string;
-  html: string;
-}
-
-export async function sendEmail({ to, subject, text, html }: EmailOptions): Promise<void> {
-  console.log('Attempting to send email to:', to);
-  console.log('Subject:', subject);
-  
-  if (!process.env.RESEND_API_KEY) {
-    console.error('RESEND_API_KEY is not set in environment variables');
-    throw new Error('RESEND_API_KEY is not set');
-  }
-  
-  console.log('RESEND_API_KEY is set, proceeding with email send');
-  
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const result = await resend.emails.send({
-      from: 'Reminders App <onboarding@resend.dev>',
-      to,
-      subject,
-      text,
-      html,
-    });
-    
-    console.log('Email sent successfully:', result);
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
-  }
-}
-
 export async function sendTestEmail(userEmail: string): Promise<{ success: boolean; error?: string }> {
-  console.log('sendTestEmail called with:', userEmail);
+  console.log('=== Starting sendTestEmail ===');
+  console.log('User email to send to:', userEmail);
   
   try {
+    console.log('Getting server session...');
     const session = await getServerSession();
-    console.log('Session:', session ? 'Found' : 'Not found');
+    console.log('Session found:', !!session);
+    console.log('Session user email:', session?.user?.email);
     
     if (!session?.user?.email) {
-      console.log('No user email in session');
+      console.log('No user email in session - unauthorized');
       return { success: false, error: 'Not authenticated' };
     }
 
+    console.log('Checking admin status...');
     const adminStatus = await isAdmin(session.user.email);
-    console.log('Admin status for', session.user.email, ':', adminStatus);
+    console.log('Admin status:', adminStatus);
     
     if (!adminStatus) {
-      console.log('User is not an admin');
+      console.log('User is not an admin - forbidden');
       return { success: false, error: 'Not authorized' };
     }
 
-    console.log('User is authenticated and authorized, sending email');
+    console.log('User is authenticated and authorized, preparing to send email...');
     
     await sendEmail({
       to: userEmail,
@@ -71,7 +40,12 @@ export async function sendTestEmail(userEmail: string): Promise<{ success: boole
     console.log('Test email sent successfully');
     return { success: true };
   } catch (error) {
-    console.error('Failed to send test email:', error);
+    console.error('=== Error in sendTestEmail ===');
+    console.error('Error details:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return { success: false, error: 'Failed to send email' };
   }
-} 
+}
