@@ -13,12 +13,13 @@ import { Reminder } from '@/models/Reminder';
 
 type ReminderRowProps = {
   reminder: Reminder;
-  onEdit: (reminder: Reminder) => void;
+  onEdit?: (reminder: Reminder) => void;
   onDelete: (reminderId: string) => void;
   isDeleting: boolean;
+  isAdmin?: boolean;
 };
 
-export default function ReminderRow({ reminder, onEdit, onDelete, isDeleting }: ReminderRowProps) {
+export default function ReminderRow({ reminder, onEdit, onDelete, isDeleting, isAdmin = false }: ReminderRowProps) {
   const nextDueDate = reminder.getNextDueDate();
   const daysUntilDue = reminder.getDaysUntilDue();
 
@@ -50,13 +51,15 @@ export default function ReminderRow({ reminder, onEdit, onDelete, isDeleting }: 
       </TableCell>
       <TableCell>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton
-            size="small"
-            onClick={() => onEdit(reminder)}
-            color="primary"
-          >
-            <EditIcon />
-          </IconButton>
+          {onEdit && (
+            <IconButton
+              size="small"
+              onClick={() => onEdit(reminder)}
+              color="primary"
+            >
+              <EditIcon />
+            </IconButton>
+          )}
           <IconButton
             size="small"
             onClick={() => onDelete(reminder.id)}

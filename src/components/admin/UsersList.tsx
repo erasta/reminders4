@@ -197,7 +197,6 @@ export default function UsersList({ users }: UsersListProps) {
                           <ReminderRow
                             key={reminder.id}
                             reminder={reminder}
-                            onEdit={handleEditReminder}
                             onDelete={handleDeleteReminder}
                             isDeleting={deletingId === reminder.id}
                           />
