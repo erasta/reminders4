@@ -12,8 +12,12 @@ import {
   Box,
   IconButton,
   Tooltip,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { useState } from 'react';
 
 type User = {
   id: string;
@@ -40,6 +44,12 @@ type UsersListProps = {
 };
 
 export default function UsersList({ users }: UsersListProps) {
+  const [alert, setAlert] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
   const handleSendTestEmail = async (email: string) => {
     try {
       const response = await fetch('/api/test-email', {
@@ -50,53 +60,109 @@ export default function UsersList({ users }: UsersListProps) {
         body: JSON.stringify({ email }),
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error('Failed to send test email');
+        throw new Error(data.error || 'Failed to send test email');
       }
 
-      alert('Test email sent successfully');
+      setAlert({
+        open: true,
+        message: 'Test email sent successfully',
+        severity: 'success',
+      });
     } catch (error) {
-      console.error('Error sending test email:', error);
-      alert(error instanceof Error ? error.message : 'Failed to send test email');
+      setAlert({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to send test email',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleSendReminders = async (email: string) => {
+    try {
+      const response = await fetch('/api/send-user-reminders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send reminders');
+      }
+
+      setAlert({
+        open: true,
+        message: 'Reminders sent successfully',
+        severity: 'success',
+      });
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to send reminders',
+        severity: 'error',
+      });
     }
   };
 
   return (
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Users
-      </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Email</TableCell>
-              <TableCell>Created At</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {formatDate(user.created_at)}
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Send Test Email">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleSendTestEmail(user.email)}
-                    >
-                      <SendIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
+    <>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Users
+        </Typography>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Email</TableCell>
+                <TableCell>Created At</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {formatDate(user.created_at)}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                      <Tooltip title="Send test email">
+                        <IconButton onClick={() => handleSendTestEmail(user.email)}>
+                          <SendIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Send reminders">
+                        <IconButton onClick={() => handleSendReminders(user.email)}>
+                          <NotificationsIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+      <Snackbar 
+        open={alert.open} 
+        autoHideDuration={6000} 
+        onClose={() => setAlert(prev => ({ ...prev, open: false }))}
+      >
+        <Alert 
+          onClose={() => setAlert(prev => ({ ...prev, open: false }))} 
+          severity={alert.severity}
+          sx={{ width: '100%' }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 } 

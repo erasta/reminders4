@@ -54,6 +54,39 @@ function createUserMessage(userEmail: string, userReminders: Reminder[]): string
          `Your Reminder System`;
 }
 
+export async function sendUserReminders(userEmail: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const result = await getRemindersDueToday();
+    
+    if (result.error) {
+      throw new Error(`Error fetching reminders: ${result.error}`);
+    }
+
+    const reminders = result.reminders as Reminder[];
+    const userReminders = reminders.filter(r => r.user_email === userEmail);
+
+    if (userReminders.length === 0) {
+      return { success: false, error: 'No reminders found for this user' };
+    }
+
+    const message = createUserMessage(userEmail, userReminders);
+    await sendEmail({
+      to: userEmail,
+      subject: 'Reminder: Companies Due Today',
+      text: message,
+      html: message.replace(/\n/g, '<br>')
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending user reminders:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to send reminders' 
+    };
+  }
+}
+
 export async function sendAllReminders(): Promise<number> {
   const result = await getRemindersDueToday();
   
