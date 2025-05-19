@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EmailIcon from '@mui/icons-material/Email';
+import SendIcon from '@mui/icons-material/Send';
 import { User } from '@/models/User';
 import { Reminder } from '@/models/Reminder';
 import ReminderRow from '../ReminderRow';
@@ -46,6 +47,7 @@ export default function UsersList({ users }: UsersListProps) {
   const [loadingReminders, setLoadingReminders] = useState<Record<string, boolean>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sendingAllForUser, setSendingAllForUser] = useState<string | null>(null);
 
   const handleSendTestEmail = async (email: string) => {
     try {
@@ -91,6 +93,39 @@ export default function UsersList({ users }: UsersListProps) {
       alert(error instanceof Error ? error.message : 'Failed to send reminder');
     } finally {
       setSendingId(null);
+    }
+  };
+
+  const handleSendAllDueReminders = async (userId: string) => {
+    if (sendingAllForUser) return;
+    
+    setSendingAllForUser(userId);
+    try {
+      const response = await fetch('/api/admin/send-user-due-reminders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to send reminders');
+      }
+
+      const data = await response.json();
+      alert(`Successfully sent ${data.count} reminders`);
+      
+      // Refresh the reminders list
+      if (userReminders[userId]) {
+        fetchUserReminders(userId);
+      }
+    } catch (error) {
+      console.error('Error sending reminders:', error);
+      alert(error instanceof Error ? error.message : 'Failed to send reminders');
+    } finally {
+      setSendingAllForUser(null);
     }
   };
 
@@ -186,6 +221,18 @@ export default function UsersList({ users }: UsersListProps) {
                 <Typography variant="body2" color="text.secondary">
                   Created: {user.createdAt.toLocaleDateString()}
                 </Typography>
+                <Tooltip title="Send All Due Reminders">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSendAllDueReminders(user.id);
+                    }}
+                    disabled={sendingAllForUser === user.id}
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title="Send Test Email">
                   <IconButton
                     size="small"
