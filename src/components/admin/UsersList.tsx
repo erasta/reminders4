@@ -45,6 +45,7 @@ export default function UsersList({ users }: UsersListProps) {
   const [userReminders, setUserReminders] = useState<Record<string, Reminder[]>>({});
   const [loadingReminders, setLoadingReminders] = useState<Record<string, boolean>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const handleSendTestEmail = async (email: string) => {
     try {
@@ -64,6 +65,32 @@ export default function UsersList({ users }: UsersListProps) {
     } catch (error) {
       console.error('Error sending test email:', error);
       alert(error instanceof Error ? error.message : 'Failed to send test email');
+    }
+  };
+
+  const handleSendReminder = async (reminder: Reminder) => {
+    if (sendingId) return;
+    
+    setSendingId(reminder.id);
+    try {
+      const response = await fetch('/api/admin/send-single-reminder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reminderId: reminder.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send reminder');
+      }
+
+      alert('Reminder sent successfully');
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      alert(error instanceof Error ? error.message : 'Failed to send reminder');
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -197,6 +224,7 @@ export default function UsersList({ users }: UsersListProps) {
                           key={reminder.id}
                           reminder={reminder}
                           onDelete={handleDeleteReminder}
+                          onSend={handleSendReminder}
                           isDeleting={deletingId === reminder.id}
                         />
                       ))}

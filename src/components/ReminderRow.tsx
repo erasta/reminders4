@@ -9,17 +9,18 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
 import { Reminder } from '@/models/Reminder';
 
 type ReminderRowProps = {
   reminder: Reminder;
   onEdit?: (reminder: Reminder) => void;
   onDelete: (reminderId: string) => void;
+  onSend?: (reminder: Reminder) => void;
   isDeleting: boolean;
-  isAdmin?: boolean;
 };
 
-export default function ReminderRow({ reminder, onEdit, onDelete, isDeleting, isAdmin = false }: ReminderRowProps) {
+export default function ReminderRow({ reminder, onEdit, onDelete, onSend, isDeleting }: ReminderRowProps) {
   const nextDueDate = reminder.getNextDueDate();
   const daysUntilDue = reminder.getDaysUntilDue();
 
@@ -62,6 +63,15 @@ export default function ReminderRow({ reminder, onEdit, onDelete, isDeleting, is
               color="primary"
             >
               <EditIcon />
+            </IconButton>
+          )}
+          {onSend && (
+            <IconButton
+              size="small"
+              onClick={() => onSend(reminder)}
+              color="primary"
+            >
+              <SendIcon />
             </IconButton>
           )}
           <IconButton
