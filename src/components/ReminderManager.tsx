@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { Box, Typography, Paper, Alert, Divider } from '@mui/material';
 import AddReminder from './AddReminder';
 import ReminderList from './ReminderList';
-import { Company, Reminder } from '@/types/reminder';
+import { Company } from '@/types/company';
+import { Reminder } from '@/models/Reminder';
 import { useLoading } from './LoadingContext';
 
 export default function ReminderManager() {

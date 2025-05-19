@@ -1,20 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getRemindersDueToday } from '@/app/actions';
 import { UserReminders } from '@/models/UserReminders';
-
-type ReminderData = {
-  id: string;
-  userId: string;
-  companyId: string;
-  companyName: string;
-  companyUserId: string | null;
-  daysBetweenReminders: number;
-  lastReminderDate: string | null;
-  createdAt: string;
-};
+import { Reminder } from '@/models/Reminder';
 
 type RemindersResult = {
-  reminders?: ReminderData[];
+  reminders?: Reminder[];
   error?: string;
 };
 
@@ -41,7 +31,7 @@ export async function GET() {
       }
       acc[userId].push(reminder);
       return acc;
-    }, {} as Record<string, ReminderData[]>);
+    }, {} as Record<string, Reminder[]>);
 
     // Create UserReminders objects
     const userReminders = Object.entries(remindersByUser).map(([userId, reminders]) => 

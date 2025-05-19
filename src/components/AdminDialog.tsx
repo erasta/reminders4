@@ -14,23 +14,8 @@ import {
   Box,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
-type User = {
-  id: string;
-  email: string;
-  created_at: Date;
-};
-
-type Reminder = {
-  id: string;
-  company_id: string;
-  company_name: string;
-  company_user_id: string | null;
-  days_between_reminders: number;
-  last_reminder_date: Date;
-  date_due: string;
-  user_email: string;
-};
+import { User } from '@/models/User';
+import { Reminder } from '@/models/Reminder';
 
 type AdminDialogProps = {
   isOpen: boolean;
@@ -74,7 +59,7 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
           if (usersResult.error) {
             setError(usersResult.error);
           } else if (usersResult.users) {
-            setUsers(usersResult.users as User[]);
+            setUsers(usersResult.users.map(user => User.fromDB(user)));
           } else {
             setUsers([]);
           }
@@ -90,7 +75,7 @@ export default function AdminDialog({ isOpen, onClose, isAuthorized }: AdminDial
                 setReminderError(remindersResult.error);
                 console.error('Error fetching reminders:', remindersResult.error);
               } else if (remindersResult.reminders) {
-                setReminders(remindersResult.reminders as Reminder[]);
+                setReminders(remindersResult.reminders.map(reminder => Reminder.fromDB(reminder)));
               } else {
                 setReminders([]);
               }

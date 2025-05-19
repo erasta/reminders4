@@ -15,36 +15,17 @@ import {
   Alert,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-
-type Reminder = {
-  id: string;
-  company_id: string;
-  company_name: string;
-  company_user_id: string | null;
-  days_between_reminders: number;
-  last_reminder_date: Date;
-  date_due: string;
-  user_email: string;
-};
-
-// Helper function to format dates safely
-function formatDate(dateString: string | Date): string {
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString();
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid Date';
-  }
-}
+import { Reminder } from '@/models/Reminder';
 
 type RemindersListProps = {
   reminders: Reminder[];
   error: string | null;
 };
+
+function formatDate(date: Date | string | null): string {
+  if (!date) return 'Never';
+  return new Date(date).toLocaleDateString();
+}
 
 export default function RemindersList({ reminders, error }: RemindersListProps) {
   const handleSendReminders = async () => {
@@ -95,14 +76,14 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
             <TableBody>
               {reminders.map((reminder) => (
                 <TableRow key={reminder.id}>
-                  <TableCell>{reminder.user_email}</TableCell>
-                  <TableCell>{reminder.company_name}</TableCell>
+                  <TableCell>{reminder.userId}</TableCell>
+                  <TableCell>{reminder.companyName}</TableCell>
                   <TableCell>
-                    {formatDate(reminder.last_reminder_date)}
+                    {formatDate(reminder.lastReminderDate)}
                   </TableCell>
-                  <TableCell>{reminder.days_between_reminders}</TableCell>
+                  <TableCell>{reminder.daysBetweenReminders}</TableCell>
                   <TableCell>
-                    {formatDate(reminder.date_due)}
+                    {formatDate(reminder.getNextDueDate())}
                   </TableCell>
                 </TableRow>
               ))}

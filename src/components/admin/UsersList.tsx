@@ -14,12 +14,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-
-type User = {
-  id: string;
-  email: string;
-  created_at: Date;
-};
+import { User } from '@/models/User';
 
 // Helper function to format dates safely
 function formatDate(dateString: string | Date): string {
@@ -71,6 +66,7 @@ export default function UsersList({ users }: UsersListProps) {
           <TableHead>
             <TableRow>
               <TableCell>Email</TableCell>
+              <TableCell>Name</TableCell>
               <TableCell>Created At</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -79,8 +75,9 @@ export default function UsersList({ users }: UsersListProps) {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.email}</TableCell>
+                <TableCell>{user.displayName}</TableCell>
                 <TableCell>
-                  {formatDate(user.created_at)}
+                  {user.createdAt.toLocaleDateString()}
                 </TableCell>
                 <TableCell align="right">
                   <Tooltip title="Send Test Email">

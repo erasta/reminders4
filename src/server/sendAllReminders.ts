@@ -2,6 +2,7 @@
 
 import { getRemindersDueToday } from '../app/actions';
 import { UserReminders } from '../models/UserReminders';
+import { User } from '../models/User';
 
 // Group reminders by user email
 function groupRemindersByUser(reminders: any[]): Record<string, any[]> {
@@ -27,10 +28,15 @@ export async function sendAllReminders(): Promise<number> {
   }
 
   const remindersByUser = groupRemindersByUser(result.reminders);
-  const userRemindersList: UserReminders[] = [];
+  const usersWithReminders: User[] = [];
 
-  // Create UserReminders objects and send emails
+  // Create User objects and send emails
   for (const [userId, userReminders] of Object.entries(remindersByUser)) {
+    const user = User.fromDB({
+      id: userId,
+      email: userId // Assuming userId is the email
+    });
+    
     const userRemindersObj = UserReminders.fromDB({
       userId,
       reminders: userReminders
@@ -38,9 +44,9 @@ export async function sendAllReminders(): Promise<number> {
     
     if (userRemindersObj.hasDueReminders) {
       await userRemindersObj.sendEmail();
-      userRemindersList.push(userRemindersObj);
+      usersWithReminders.push(user);
     }
   }
   
-  return userRemindersList.length;
+  return usersWithReminders.length;
 } 
