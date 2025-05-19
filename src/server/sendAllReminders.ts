@@ -54,6 +54,21 @@ function createUserMessage(userEmail: string, userReminders: Reminder[]): string
          `Your Reminder System`;
 }
 
+// Create a message for a single reminder
+function createSingleReminderMessage(userEmail: string, reminder: Reminder): string {
+  const userName = toTitleCase(userEmail.split('@')[0].replace(/[._-]/g, ' '));
+  const dueDate = new Date(reminder.date_due).toLocaleDateString();
+  
+  return `Dear ${userName},\n\n` +
+         `This is a reminder that ${reminder.company_name} has reached its due date (${dueDate}).\n\n` +
+         `Company Details:\n` +
+         `  - Company Name: ${reminder.company_name}\n` +
+         `  - User ID: ${reminder.company_user_id || 'Not assigned'}\n\n` +
+         `Please take necessary action.\n` +
+         `Best regards,\n` +
+         `Your Reminder System`;
+}
+
 export async function sendUserReminders(userEmail: string): Promise<{ success: boolean; error?: string }> {
   try {
     const result = await getRemindersDueToday();
@@ -83,6 +98,39 @@ export async function sendUserReminders(userEmail: string): Promise<{ success: b
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to send reminders' 
+    };
+  }
+}
+
+export async function sendSingleReminder(reminderId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const result = await getRemindersDueToday();
+    
+    if (result.error) {
+      throw new Error(`Error fetching reminders: ${result.error}`);
+    }
+
+    const reminders = result.reminders as Reminder[];
+    const reminder = reminders.find(r => r.id === reminderId);
+
+    if (!reminder) {
+      return { success: false, error: 'Reminder not found' };
+    }
+
+    const message = createSingleReminderMessage(reminder.user_email, reminder);
+    await sendEmail({
+      to: reminder.user_email,
+      subject: `Reminder: ${reminder.company_name} Due Today`,
+      text: message,
+      html: message.replace(/\n/g, '<br>')
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending single reminder:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to send reminder' 
     };
   }
 }
