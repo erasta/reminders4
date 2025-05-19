@@ -87,7 +87,11 @@ export default function UsersList({ users }: UsersListProps) {
         reminder.daysBetweenReminders,
         reminder.lastReminderDate ? new Date(reminder.lastReminderDate) : null,
         new Date(reminder.createdAt)
-      ));
+      )).sort((a: Reminder, b: Reminder) => {
+        const aDue = a.getNextDueDate()?.getTime() ?? Infinity;
+        const bDue = b.getNextDueDate()?.getTime() ?? Infinity;
+        return aDue - bDue;
+      });
       setUserReminders(prev => ({ ...prev, [userId]: reminders }));
     } catch (error) {
       console.error('Error fetching reminders:', error);

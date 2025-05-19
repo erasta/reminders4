@@ -24,9 +24,15 @@ type ReminderListProps = {
 export default function ReminderList({ reminders: rawReminders, onEditReminder, onDeleteReminder, onError }: ReminderListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Convert raw reminder data to Reminder instances
+  // Convert raw reminder data to Reminder instances and sort by due date
   const reminders = useMemo(() => 
-    rawReminders.map(reminder => Reminder.fromDB(reminder)),
+    rawReminders
+      .map(reminder => Reminder.fromDB(reminder))
+      .sort((a, b) => {
+        const aDue = a.getNextDueDate()?.getTime() ?? Infinity;
+        const bDue = b.getNextDueDate()?.getTime() ?? Infinity;
+        return aDue - bDue;
+      }),
     [rawReminders]
   );
 

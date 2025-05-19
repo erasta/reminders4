@@ -40,7 +40,11 @@ export default function ReminderRow({ reminder, onEdit, onDelete, isDeleting, is
       </TableCell>
       <TableCell>
         {reminder.isDue() ? (
-          <Typography color="error">Due</Typography>
+          reminder.getDaysUntilDue() === 0 ? (
+            <Typography color="warning.main">Due Today</Typography>
+          ) : (
+            <Typography color="error">Due</Typography>
+          )
         ) : (
           <Typography color="text.secondary">
             {daysUntilDue !== null 
