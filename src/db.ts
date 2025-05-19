@@ -1,21 +1,11 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
+import { Reminder } from './models/Reminder';
 
 export type Text = {
   id: number;
   userId: string;
   content: string;
-  createdAt: Date;
-};
-
-export type Reminder = {
-  id: string;
-  userId: string;
-  companyId: string;
-  companyName: string;
-  companyUserId: string | null;
-  daysBetweenReminders: number;
-  lastReminderDate: Date | null;
   createdAt: Date;
 };
 
@@ -73,7 +63,7 @@ export async function addText(userEmail: string, content: string) {
 export async function getReminders(userEmail: string) {
   noStore();
   try {
-    const result = await sql<Reminder>`
+    const result = await sql`
       SELECT 
         r.id,
         r.user_id as "userId",
@@ -88,7 +78,7 @@ export async function getReminders(userEmail: string) {
       WHERE u.email = ${userEmail}
       ORDER BY r.created_at DESC
     `;
-    return result.rows;
+    return result.rows.map(row => Reminder.fromDB(row));
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch reminders.');
@@ -165,7 +155,7 @@ export async function addReminder({ userEmail, companyId, companyName, companyUs
       throw new Error('Failed to create reminder');
     }
     
-    return result.rows[0];
+    return Reminder.fromDB(result.rows[0]);
   } catch (error) {
     console.error('Database Error:', error);
     throw error instanceof Error ? error : new Error('Failed to add reminder');
@@ -174,7 +164,7 @@ export async function addReminder({ userEmail, companyId, companyName, companyUs
 
 export async function updateLastReminderDate(reminderId: string) {
   try {
-    const result = await sql<Reminder>`
+    const result = await sql`
       UPDATE reminders
       SET last_reminder_date = CURRENT_TIMESTAMP
       WHERE id = ${reminderId}
@@ -188,7 +178,7 @@ export async function updateLastReminderDate(reminderId: string) {
         last_reminder_date as "lastReminderDate",
         created_at as "createdAt"
     `;
-    return result.rows[0];
+    return Reminder.fromDB(result.rows[0]);
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to update reminder.');
@@ -243,7 +233,7 @@ export async function updateReminder({ reminderId, companyUserId, daysBetweenRem
     }
     
     const result = await query;
-    return result.rows[0];
+    return Reminder.fromDB(result.rows[0]);
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to update reminder.');

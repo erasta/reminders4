@@ -1,31 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  TableCell,
   Paper,
-  IconButton,
   Typography,
-  Box,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Reminder } from '@/types/reminder';
+import { Reminder } from '@/models/Reminder';
+import ReminderRow from './ReminderRow';
 
 type ReminderListProps = {
-  reminders: Reminder[];
+  reminders: any[]; // Raw reminder data from the API
   onEditReminder: (reminder: Reminder) => void;
   onDeleteReminder: (reminderId: string) => void;
   onError: (error: string) => void;
 };
 
-export default function ReminderList({ reminders, onEditReminder, onDeleteReminder, onError }: ReminderListProps) {
+export default function ReminderList({ reminders: rawReminders, onEditReminder, onDeleteReminder, onError }: ReminderListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Convert raw reminder data to Reminder instances
+  const reminders = useMemo(() => 
+    rawReminders.map(reminder => Reminder.fromDB(reminder)),
+    [rawReminders]
+  );
 
   const handleDelete = async (reminderId: string) => {
     if (deletingId) return;
@@ -66,40 +69,20 @@ export default function ReminderList({ reminders, onEditReminder, onDeleteRemind
             <TableCell>User ID</TableCell>
             <TableCell>Days Between</TableCell>
             <TableCell>Last Reminder</TableCell>
+            <TableCell>Next Due Date</TableCell>
+            <TableCell>Status</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {reminders.map((reminder) => (
-            <TableRow key={reminder.id}>
-              <TableCell>{reminder.companyName}</TableCell>
-              <TableCell>{reminder.companyUserId || 'Not assigned'}</TableCell>
-              <TableCell>{reminder.daysBetweenReminders}</TableCell>
-              <TableCell>
-                {reminder.lastReminderDate 
-                  ? new Date(reminder.lastReminderDate).toLocaleDateString()
-                  : 'Never'}
-              </TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => onEditReminder(reminder)}
-                    color="primary"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDelete(reminder.id)}
-                    disabled={deletingId === reminder.id}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </TableCell>
-            </TableRow>
+            <ReminderRow
+              key={reminder.id}
+              reminder={reminder}
+              onEdit={onEditReminder}
+              onDelete={handleDelete}
+              isDeleting={deletingId === reminder.id}
+            />
           ))}
         </TableBody>
       </Table>
