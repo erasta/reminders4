@@ -5,6 +5,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  AccordionActions,
   Typography,
   Box,
   IconButton,
@@ -221,32 +222,28 @@ export default function UsersList({ users }: UsersListProps) {
                 <Typography variant="body2" color="text.secondary">
                   Created: {user.createdAt.toLocaleDateString()}
                 </Typography>
-                <Tooltip title="Send All Due Reminders">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSendAllDueReminders(user.id);
-                    }}
-                    disabled={sendingAllForUser === user.id}
-                  >
-                    <SendIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Send Test Email">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSendTestEmail(user.email);
-                    }}
-                  >
-                    <EmailIcon />
-                  </IconButton>
-                </Tooltip>
               </Box>
             </Box>
           </AccordionSummary>
+          <AccordionActions>
+            <Tooltip title="Send All Due Reminders">
+              <IconButton
+                size="small"
+                onClick={() => handleSendAllDueReminders(user.id)}
+                disabled={sendingAllForUser === user.id}
+              >
+                <SendIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Send Test Email">
+              <IconButton
+                size="small"
+                onClick={() => handleSendTestEmail(user.email)}
+              >
+                <EmailIcon />
+              </IconButton>
+            </Tooltip>
+          </AccordionActions>
           <AccordionDetails>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {loadingReminders[user.id] ? (
