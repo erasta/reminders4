@@ -1,4 +1,5 @@
 import { Reminder } from './Reminder';
+import { sql } from '@vercel/postgres';
 
 export class UserReminders {
   constructor(
@@ -22,13 +23,14 @@ export class UserReminders {
   async sendEmail(recipientEmail: string): Promise<void> {
     if (!this.hasDueReminders) return;
 
-    const reminderList = this.dueReminders
+    const dueRemindersToSend = [...this.dueReminders];
+
+    const reminderList = dueRemindersToSend
       .map(reminder => reminder.getEmailMessage())
       .join('\n');
     
     const message = `Hello,\n\nYou have the following reminders due today:\n\n${reminderList}\n\nPlease take action on these reminders.\n\nBest regards,\nYour Reminder System`;
 
-    // Construct absolute URL for server-side fetch
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const apiUrl = `${baseUrl}/api/send-reminder-email`;
 
@@ -46,7 +48,16 @@ export class UserReminders {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send reminder email');
+      throw new Error(`Failed to send reminder email. Status: ${response.status}`);
+    }
+
+    try {
+      for (const reminder of dueRemindersToSend) {
+        await sql`UPDATE reminders SET last_reminder_date = CURRENT_TIMESTAMP WHERE id = ${reminder.id};`;
+        console.log(`Updated last_reminder_date for reminder ID: ${reminder.id}`);
+      }
+    } catch (dbError) {
+      console.error('Failed to update last_reminder_date after sending email:', dbError);
     }
   }
 

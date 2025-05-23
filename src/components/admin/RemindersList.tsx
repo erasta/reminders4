@@ -22,6 +22,7 @@ import ReminderRow from '../ReminderRow';
 type RemindersListProps = {
   reminders: Reminder[];
   error: string | null;
+  onRemindersSent: () => void;
 };
 
 // formatDate is not used if ReminderRow handles its own date formatting
@@ -30,7 +31,7 @@ type RemindersListProps = {
 //   return new Date(date).toLocaleDateString();
 // }
 
-export default function RemindersList({ reminders, error }: RemindersListProps) {
+export default function RemindersList({ reminders, error, onRemindersSent }: RemindersListProps) {
   // const handleSendReminders = async () => { // Old combined handler
   //   try {
   //     const userCount = await sendAllReminders(); // This would now need a list
@@ -73,6 +74,7 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
       const plainDueTodayReminders = dueTodayReminders.map(r => r.toJSON());
       const userCount = await sendAllReminders(plainDueTodayReminders);
       alert(`Sent reminders due today to ${userCount} user(s).`);
+      onRemindersSent();
     } catch (err) {
       alert(`Failed to send reminders due today: ${(err instanceof Error ? err.message : String(err))}`);
     }
@@ -88,6 +90,7 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
       const plainOverdueReminders = overdueReminders.map(r => r.toJSON());
       const userCount = await sendAllReminders(plainOverdueReminders);
       alert(`Sent overdue reminders to ${userCount} user(s).`);
+      onRemindersSent();
     } catch (err) {
       alert(`Failed to send overdue reminders: ${(err instanceof Error ? err.message : String(err))}`);
     }
