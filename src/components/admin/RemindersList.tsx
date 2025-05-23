@@ -31,14 +31,14 @@ type RemindersListProps = {
 // }
 
 export default function RemindersList({ reminders, error }: RemindersListProps) {
-  const handleSendReminders = async () => {
-    try {
-      const userCount = await sendAllReminders();
-      alert(`Reminders sent to ${userCount} users.`);
-    } catch (err) { // Changed error to err to avoid conflict with prop
-      alert(err instanceof Error ? err.message : 'Failed to send reminders');
-    }
-  };
+  // const handleSendReminders = async () => { // Old combined handler
+  //   try {
+  //     const userCount = await sendAllReminders(); // This would now need a list
+  //     alert(`Reminders sent to ${userCount} users.`);
+  //   } catch (err) {
+  //     alert(err instanceof Error ? err.message : 'Failed to send reminders');
+  //   }
+  // };
 
   // Placeholder functions for ReminderRow props in admin context
   // const handleEditPlaceholder = (reminder: Reminder) => {
@@ -62,6 +62,32 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
   const overdueReminders = reminders.filter(
     (reminder) => (reminder.getDaysUntilDue() ?? 0) < 0 // Handle null for getDaysUntilDue just in case
   );
+
+  const handleSendDueTodayReminders = async () => {
+    if (dueTodayReminders.length === 0) {
+      alert('No reminders due today to send.');
+      return;
+    }
+    try {
+      const userCount = await sendAllReminders(dueTodayReminders);
+      alert(`Sent reminders due today to ${userCount} user(s).`);
+    } catch (err) {
+      alert(`Failed to send reminders due today: ${(err instanceof Error ? err.message : String(err))}`);
+    }
+  };
+
+  const handleSendOverdueReminders = async () => {
+    if (overdueReminders.length === 0) {
+      alert('No overdue reminders to send.');
+      return;
+    }
+    try {
+      const userCount = await sendAllReminders(overdueReminders);
+      alert(`Sent overdue reminders to ${userCount} user(s).`);
+    } catch (err) {
+      alert(`Failed to send overdue reminders: ${(err instanceof Error ? err.message : String(err))}`);
+    }
+  };
 
   const renderRemindersTable = (title: string, reminderList: Reminder[]) => {
     if (reminderList.length === 0) {
@@ -116,18 +142,31 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+        <Typography variant="h5" sx={{ mb: { xs: 1, sm: 0} }}> 
           Due Reminders Overview
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<SendIcon />}
-          onClick={handleSendReminders}
-        >
-          Send All Due Reminders
-        </Button>
+        {/* Button group for sending reminders */}
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap'}}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SendIcon />}
+            onClick={handleSendDueTodayReminders} // New handler
+            disabled={dueTodayReminders.length === 0}
+          >
+            Send Due Today ({dueTodayReminders.length})
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary" // Changed color for distinction
+            startIcon={<SendIcon />}
+            onClick={handleSendOverdueReminders} // New handler
+            disabled={overdueReminders.length === 0}
+          >
+            Send Overdue ({overdueReminders.length})
+          </Button>
+        </Box>
       </Box>
 
       {error ? (

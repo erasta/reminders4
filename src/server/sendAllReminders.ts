@@ -1,52 +1,46 @@
 'use server';
 
-import { getRemindersDueToday } from '../app/actions';
 import { UserReminders } from '../models/UserReminders';
 import { User } from '../models/User';
+import { Reminder } from '../models/Reminder';
 
-// Group reminders by user email
-function groupRemindersByUser(reminders: any[]): Record<string, any[]> {
+// Group reminders by user ID
+function groupRemindersByUserId(reminders: Reminder[]): Record<string, Reminder[]> {
   return reminders.reduce((acc, reminder) => {
-    const userEmail = reminder.userId;
-    if (!acc[userEmail]) {
-      acc[userEmail] = [];
+    const userId = reminder.userId;
+    if (!acc[userId]) {
+      acc[userId] = [];
     }
-    acc[userEmail].push(reminder);
+    acc[userId].push(reminder);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Reminder[]>);
 }
 
-export async function sendAllReminders(): Promise<number> {
-  const result = await getRemindersDueToday();
-  
-  if (result.error) {
-    throw new Error(`Error fetching reminders: ${result.error}`);
-  }
-
-  if (!result.reminders) {
+// Modified to accept a list of Reminder objects
+export async function sendAllReminders(remindersToProcess: Reminder[]): Promise<number> {
+  if (!remindersToProcess || remindersToProcess.length === 0) {
     return 0;
   }
 
-  const remindersByUser = groupRemindersByUser(result.reminders);
-  const usersWithReminders: User[] = [];
+  const remindersByUserId = groupRemindersByUserId(remindersToProcess);
+  const usersEmailed: Set<string> = new Set();
 
-  // Create User objects and send emails
-  for (const [userId, userReminders] of Object.entries(remindersByUser)) {
-    const user = User.fromDB({
-      id: userId,
-      email: userId // Assuming userId is the email
-    });
-    
-    const userRemindersObj = UserReminders.fromDB({
-      userId,
-      reminders: userReminders
-    });
-    
+  for (const [userId, userSpecificReminders] of Object.entries(remindersByUserId)) {
+    if (userSpecificReminders.length === 0) {
+      continue;
+    }
+
+    const userRemindersObj = new UserReminders(userId, userSpecificReminders, new Date());
+
     if (userRemindersObj.hasDueReminders) {
-      await userRemindersObj.sendEmail();
-      usersWithReminders.push(user);
+      try {
+        await userRemindersObj.sendEmail();
+        usersEmailed.add(userId);
+      } catch (error) {
+        console.error(`Failed to send reminders to user ${userId}:`, error);
+      }
     }
   }
   
-  return usersWithReminders.length;
+  return usersEmailed.size;
 } 
