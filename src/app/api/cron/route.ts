@@ -5,7 +5,7 @@ import { Reminder } from '@/models/Reminder';
 
 export async function GET() {
   try {
-    console.log('Cron job started: Fetching due reminders...');
+    console.log('Cron job started: Fetching all due reminders...');
     const result = await getRemindersDueToday();
 
     if (result.error) {
@@ -14,24 +14,42 @@ export async function GET() {
     }
 
     if (!result.reminders || result.reminders.length === 0) {
-      console.log('Cron job: No reminders due today or overdue.');
+      console.log('Cron job: No reminders due today or overdue were found.');
       return NextResponse.json({ 
         success: true, 
         message: 'No reminders were due to be sent.' 
       });
     }
 
-    const reminderInstances: Reminder[] = result.reminders.map(data => Reminder.fromDB(data));
+    const allDueReminderInstances: Reminder[] = result.reminders.map(data => Reminder.fromDB(data));
     
-    const plainRemindersData = reminderInstances.map(instance => instance.toJSON());
+    const dueTodayInstances = allDueReminderInstances.filter(
+      instance => instance.getDaysUntilDue() === 0
+    );
 
-    console.log(`Cron job: Processing ${plainRemindersData.length} reminders.`);
-    const userCount = await sendAllReminders(plainRemindersData);
+    if (dueTodayInstances.length === 0) {
+      console.log('Cron job: No reminders are due exactly today.');
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No reminders were due exactly today.' 
+      });
+    }
     
-    console.log(`Cron job finished: Reminders sent to ${userCount} user(s).`);
+    const plainDueTodayData = dueTodayInstances.map(instance => instance.toJSON());
+
+    console.log(`Cron job: Processing ${plainDueTodayData.length} reminders due exactly today.`);
+    const emailedUserIds = await sendAllReminders(plainDueTodayData);
+    
+    if (emailedUserIds.length > 0) {
+      console.log(`Cron job finished: Successfully sent 'due today' reminders to ${emailedUserIds.length} user(s). User IDs: ${emailedUserIds.join(', ')}`);
+    } else {
+      console.log('Cron job finished: No \'due today\' reminders were sent (either none processed or all failed).');
+    }
+    
     return NextResponse.json({ 
       success: true, 
-      message: `Reminders sent to ${userCount} user(s).` 
+      message: `'Due today' reminder processing complete. Emails sent to ${emailedUserIds.length} user(s).`,
+      emailedUserIds: emailedUserIds
     });
   } catch (error) {
     console.error('Cron job error:', error);

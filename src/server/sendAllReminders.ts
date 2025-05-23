@@ -17,16 +17,15 @@ function groupRemindersByUserId(reminders: Reminder[]): Record<string, Reminder[
   }, {} as Record<string, Reminder[]>);
 }
 
-// Modified to accept an array of plain reminder data objects
-export async function sendAllReminders(plainRemindersData: any[]): Promise<number> {
+// Modified to accept an array of plain reminder data objects and return user IDs emailed
+export async function sendAllReminders(plainRemindersData: any[]): Promise<string[]> {
   if (!plainRemindersData || plainRemindersData.length === 0) {
-    return 0;
+    return [];
   }
 
   const remindersToProcess: Reminder[] = plainRemindersData.map(data => Reminder.fromDB(data));
-
   const remindersByUserId = groupRemindersByUserId(remindersToProcess);
-  const usersEmailed: Set<string> = new Set();
+  const usersEmailedSuccessfully: Set<string> = new Set();
 
   for (const [userId, userSpecificReminders] of Object.entries(remindersByUserId)) {
     if (userSpecificReminders.length === 0) {
@@ -34,29 +33,27 @@ export async function sendAllReminders(plainRemindersData: any[]): Promise<numbe
     }
 
     try {
-      // Fetch user's email
       const userResult = await sql`SELECT email FROM users WHERE id = ${userId};`;
       if (userResult.rows.length === 0) {
-        console.error(`Failed to find email for user ${userId}. Skipping.`);
+        console.error(`sendAllReminders: Failed to find email for user ${userId}. Skipping.`);
         continue;
       }
       const recipientEmail = userResult.rows[0].email;
-
       if (!recipientEmail) {
-        console.error(`Email is null or undefined for user ${userId}. Skipping.`);
+        console.error(`sendAllReminders: Email is null or undefined for user ${userId}. Skipping.`);
         continue;
       }
 
       const userRemindersObj = new UserReminders(userId, userSpecificReminders, new Date());
 
       if (userRemindersObj.hasDueReminders) {
-        await userRemindersObj.sendEmail(recipientEmail); // Pass fetched email
-        usersEmailed.add(userId); // Still track by userId for unique user count
+        await userRemindersObj.sendEmail(recipientEmail);
+        usersEmailedSuccessfully.add(userId);
       }
     } catch (error) {
-      console.error(`Failed to process or send reminders for user ${userId}:`, error);
+      console.error(`sendAllReminders: Failed to process or send reminders for user ${userId}:`, error);
     }
   }
   
-  return usersEmailed.size;
+  return Array.from(usersEmailedSuccessfully);
 } 
