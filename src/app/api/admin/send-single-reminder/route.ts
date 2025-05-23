@@ -6,6 +6,11 @@ import { sql } from '@vercel/postgres';
 import { Reminder, ReminderDataFromDB } from '@/models/Reminder';
 import { sendEmail } from '@/server/sendgridUtils';
 
+// Define a type for the specific query result for this route
+interface ReminderQueryResult extends ReminderDataFromDB {
+  userEmail: string;
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -44,10 +49,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Reminder not found' }, { status: 404 });
     }
 
-    // Cast the row to ReminderDataFromDB before passing to Reminder.fromDB
-    const reminderData = result.rows[0] as ReminderDataFromDB;
-    const reminder = Reminder.fromDB(reminderData);
-    const userEmail = (result.rows[0] as any).userEmail;
+    // Cast the row to the specific query result type
+    const queryRow = result.rows[0] as ReminderQueryResult;
+    
+    const reminder = Reminder.fromDB(queryRow); // queryRow is compatible with ReminderDataFromDB
+    const userEmail = queryRow.userEmail;       // Access userEmail directly
 
     // Send the email
     const message = `Hello,\n\nYou have a reminder for ${reminder.companyName}.\n\nPlease take action on this reminder.\n\nBest regards,\nYour Reminder System`;
