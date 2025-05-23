@@ -1,79 +1,59 @@
 'use server';
 
-import { getRemindersDueToday } from '../app/actions';
-import { sendEmail } from './sendgridUtils';
+import { UserReminders } from '../models/UserReminders';
+// import { User } from '../models/User'; // User model might not be needed if we fetch email directly
+import { Reminder } from '../models/Reminder';
+import { sql } from '@vercel/postgres'; // Import sql
 
-type Reminder = {
-  id: string;
-  company_id: string;
-  company_name: string;
-  company_user_id: string | null;
-  days_between_reminders: number;
-  last_reminder_date: Date;
-  date_due: string;
-  user_email: string;
-};
-
-// Helper function to convert string to title case
-function toTitleCase(str: string): string {
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-// Group reminders by user email
-function groupRemindersByUser(reminders: Reminder[]): Record<string, Reminder[]> {
+// Group reminders by user ID (expects Reminder instances)
+function groupRemindersByUserId(reminders: Reminder[]): Record<string, Reminder[]> {
   return reminders.reduce((acc, reminder) => {
-    if (!acc[reminder.user_email]) {
-      acc[reminder.user_email] = [];
+    const userId = reminder.userId;
+    if (!acc[userId]) {
+      acc[userId] = [];
     }
-    acc[reminder.user_email].push(reminder);
+    acc[userId].push(reminder);
     return acc;
   }, {} as Record<string, Reminder[]>);
 }
 
-// Create a message for a single user
-function createUserMessage(userEmail: string, userReminders: Reminder[]): string {
-  const companyList = userReminders
-    .map(r => `  - ${r.company_name}\n    User ID: ${r.company_user_id || 'Not assigned'}`)
-    .join('\n');
-  
-  const dueDates = userReminders
-    .map(r => new Date(r.date_due).toLocaleDateString())
-    .join(', ');
-  
-  const userName = toTitleCase(userEmail.split('@')[0].replace(/[._-]/g, ' '));
-  
-  return `Dear ${userName},\n\n` +
-         `This is a reminder that the following companies have reached their due date (${dueDates}):\n\n` +
-         `${companyList}\n\n` +
-         `Please take necessary action.\n` +
-         `Best regards,\n` +
-         `Your Reminder System`;
-}
-
-export async function sendAllReminders(): Promise<number> {
-  const result = await getRemindersDueToday();
-  
-  if (result.error) {
-    throw new Error(`Error fetching reminders: ${result.error}`);
+// Modified to accept an array of plain reminder data objects and return user IDs emailed
+export async function sendAllReminders(plainRemindersData: any[]): Promise<string[]> {
+  if (!plainRemindersData || plainRemindersData.length === 0) {
+    return [];
   }
 
-  const reminders = result.reminders as Reminder[];
-  const remindersByUser = groupRemindersByUser(reminders);
+  const remindersToProcess: Reminder[] = plainRemindersData.map(data => Reminder.fromDB(data));
+  const remindersByUserId = groupRemindersByUserId(remindersToProcess);
+  const usersEmailedSuccessfully: Set<string> = new Set();
 
-  // Send emails to each user
-  for (const [userEmail, userReminders] of Object.entries(remindersByUser)) {
-    const message = createUserMessage(userEmail, userReminders);
-    await sendEmail({
-      to: userEmail,
-      subject: 'Reminder: Companies Due Today',
-      text: message,
-      html: message.replace(/\n/g, '<br>')
-    });
+  for (const [userId, userSpecificReminders] of Object.entries(remindersByUserId)) {
+    if (userSpecificReminders.length === 0) {
+      continue;
+    }
+
+    try {
+      const userResult = await sql`SELECT email FROM users WHERE id = ${userId};`;
+      if (userResult.rows.length === 0) {
+        console.error(`sendAllReminders: Failed to find email for user ${userId}. Skipping.`);
+        continue;
+      }
+      const recipientEmail = userResult.rows[0].email;
+      if (!recipientEmail) {
+        console.error(`sendAllReminders: Email is null or undefined for user ${userId}. Skipping.`);
+        continue;
+      }
+
+      const userRemindersObj = new UserReminders(userId, userSpecificReminders, new Date());
+
+      if (userRemindersObj.hasDueReminders) {
+        await userRemindersObj.sendEmail(recipientEmail);
+        usersEmailedSuccessfully.add(userId);
+      }
+    } catch (error) {
+      console.error(`sendAllReminders: Failed to process or send reminders for user ${userId}:`, error);
+    }
   }
   
-  return Object.keys(remindersByUser).length;
+  return Array.from(usersEmailedSuccessfully);
 } 
