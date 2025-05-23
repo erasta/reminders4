@@ -5,6 +5,21 @@ import { UserReminders } from '../models/UserReminders';
 import { Reminder } from '../models/Reminder';
 import { sql } from '@vercel/postgres'; // Import sql
 
+// Interface for the objects produced by Reminder.toJSON()
+interface PlainReminderJSON {
+  id: string;
+  userId: string;
+  companyId: string;
+  companyName: string;
+  companyUserId: string | null;
+  daysBetweenReminders: number;
+  lastReminderDate: string | null;
+  nextDueDate: string | null;
+  createdAt: string;
+  isDue: boolean;
+  daysUntilDue: number | null;
+}
+
 // Group reminders by user ID (expects Reminder instances)
 function groupRemindersByUserId(reminders: Reminder[]): Record<string, Reminder[]> {
   return reminders.reduce((acc, reminder) => {
@@ -18,12 +33,27 @@ function groupRemindersByUserId(reminders: Reminder[]): Record<string, Reminder[
 }
 
 // Modified to accept an array of plain reminder data objects and return user IDs emailed
-export async function sendAllReminders(plainRemindersData: any[]): Promise<string[]> {
+export async function sendAllReminders(plainRemindersData: PlainReminderJSON[]): Promise<string[]> {
   if (!plainRemindersData || plainRemindersData.length === 0) {
     return [];
   }
 
-  const remindersToProcess: Reminder[] = plainRemindersData.map(data => Reminder.fromDB(data));
+  const remindersToProcess: Reminder[] = plainRemindersData.map(data => {
+    // Explicitly create an object matching the structure Reminder.fromDB expects
+    // (which is ReminderDataFromDB as defined in Reminder.ts)
+    const dataForFromDB = {
+      id: data.id,
+      userId: data.userId,
+      companyId: data.companyId,
+      companyName: data.companyName,
+      companyUserId: data.companyUserId,
+      daysBetweenReminders: data.daysBetweenReminders,
+      lastReminderDate: data.lastReminderDate, // This is string | null from PlainReminderJSON
+      createdAt: data.createdAt,             // This is string from PlainReminderJSON
+    };
+    return Reminder.fromDB(dataForFromDB);
+  });
+
   const remindersByUserId = groupRemindersByUserId(remindersToProcess);
   const usersEmailedSuccessfully: Set<string> = new Set();
 

@@ -1,4 +1,17 @@
-import { sendEmail } from '../server/sendgridUtils';
+// import { sendEmail } from '../server/sendgridUtils'; // This import is unused
+
+// Define an interface for the data structure expected by fromDB
+export interface ReminderDataFromDB {
+  id: string;
+  userId: string;
+  companyId: string;
+  companyName: string;
+  companyUserId: string | null;
+  daysBetweenReminders: number;
+  lastReminderDate: string | Date | null; // Can be string from DB or already Date
+  createdAt: string | Date; // Can be string from DB or already Date
+  // Include other fields if they come directly from the database and are used here
+}
 
 export class Reminder {
   constructor(
@@ -60,15 +73,20 @@ export class Reminder {
     return `- ${this.companyName} (Due: ${nextDueDate?.toLocaleDateString() || 'Not set'})`;
   }
 
+  // This static method might be unused. If linting confirms, it can be removed later.
   static async sendRemindersEmail(reminders: Reminder[]): Promise<void> {
     if (reminders.length === 0) return;
 
-    const userEmail = reminders[0].userId; // All reminders should be for the same user
+    const userEmail = reminders[0].userId; 
     const reminderList = reminders.map(reminder => reminder.getEmailMessage()).join('\n');
     
     const message = `Hello,\n\nYou have the following reminders due:\n\n${reminderList}\n\nPlease take action on these reminders.\n\nBest regards,\nYour Reminder System`;
 
-    const response = await fetch('/api/send-reminder-email', {
+    // This fetch call would also need an absolute URL for server-side execution
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/send-reminder-email`;
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -86,7 +104,7 @@ export class Reminder {
     }
   }
 
-  static fromDB(data: any): Reminder {
+  static fromDB(data: ReminderDataFromDB): Reminder { // Use the defined interface
     return new Reminder(
       data.id,
       data.userId,

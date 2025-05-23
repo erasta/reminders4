@@ -11,11 +11,11 @@ import {
   Paper,
   Typography,
 } from '@mui/material';
-import { Reminder } from '@/models/Reminder';
+import { Reminder, ReminderDataFromDB } from '@/models/Reminder';
 import ReminderRow from './ReminderRow';
 
 type ReminderListProps = {
-  reminders: any[]; // Raw reminder data from the API
+  reminders: ReminderDataFromDB[]; // Use ReminderDataFromDB[] instead of any[]
   onEditReminder: (reminder: Reminder) => void;
   onDeleteReminder: (reminderId: string) => void;
   onError: (error: string) => void;

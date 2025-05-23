@@ -1,6 +1,21 @@
 import { Reminder } from './Reminder';
 import { sql } from '@vercel/postgres';
 
+// Assuming ReminderDataFromDB is defined in Reminder.ts and can be imported or re-defined here
+// For simplicity, if Reminder.ts is in the same directory, it might be accessible.
+// Or we define a similar interface here if not directly importable.
+interface ReminderDataForUserReminders {
+  id: string;
+  userId: string;
+  companyId: string;
+  companyName: string;
+  companyUserId: string | null;
+  daysBetweenReminders: number;
+  lastReminderDate: string | Date | null;
+  createdAt: string | Date;
+  // Match this to what Reminder.fromDB expects, which is ReminderDataFromDB
+}
+
 export class UserReminders {
   constructor(
     public readonly userId: string,
@@ -72,10 +87,10 @@ export class UserReminders {
     };
   }
 
-  static fromDB(data: { userId: string, reminders: any[], date?: string }): UserReminders {
+  static fromDB(data: { userId: string, reminders: ReminderDataForUserReminders[], date?: string }): UserReminders {
     return new UserReminders(
       data.userId,
-      data.reminders.map(reminder => Reminder.fromDB(reminder)),
+      data.reminders.map(reminderData => Reminder.fromDB(reminderData)), // Pass ReminderDataForUserReminders
       data.date ? new Date(data.date) : new Date()
     );
   }

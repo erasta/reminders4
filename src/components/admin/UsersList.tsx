@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Accordion,
   AccordionSummary,
@@ -26,22 +26,35 @@ import { Reminder } from '@/models/Reminder';
 import ReminderRow from '../ReminderRow';
 
 // Helper function to format dates safely
-function formatDate(dateString: string | Date): string {
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString();
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid Date';
-  }
-}
+// function formatDate(dateString: string | Date): string {
+//   try {
+//     const date = new Date(dateString);
+//     if (isNaN(date.getTime())) {
+//       return 'Invalid Date';
+//     }
+//     return date.toLocaleDateString();
+//   } catch (error) {
+//     console.error('Error formatting date:', error);
+//     return 'Invalid Date';
+//   }
+// }
 
 type UsersListProps = {
   users: User[];
 };
+
+// Define a type for the raw reminder data from the API
+interface RawReminderData {
+  id: string;
+  userId: string;
+  companyId: string;
+  companyName: string;
+  companyUserId: string | null;
+  daysBetweenReminders: number;
+  lastReminderDate: string | null; // Assuming it comes as string from JSON
+  createdAt: string; // Assuming it comes as string from JSON
+  // Add any other fields that come from /api/admin/user-reminders?userId=${userId}
+}
 
 export default function UsersList({ users }: UsersListProps) {
   const [userReminders, setUserReminders] = useState<Record<string, Reminder[]>>({});
@@ -118,7 +131,6 @@ export default function UsersList({ users }: UsersListProps) {
       const data = await response.json();
       alert(`Successfully sent ${data.count} reminders`);
       
-      // Refresh the reminders list
       if (userReminders[userId]) {
         fetchUserReminders(userId);
       }
@@ -139,9 +151,8 @@ export default function UsersList({ users }: UsersListProps) {
       if (!response.ok) {
         throw new Error('Failed to fetch reminders');
       }
-      const data = await response.json();
-      // Convert the raw data to Reminder instances
-      const reminders = data.map((reminder: any) => new Reminder(
+      const data: RawReminderData[] = await response.json(); // Use RawReminderData type
+      const reminders = data.map((reminder) => new Reminder( // Now reminder is typed
         reminder.id,
         reminder.userId,
         reminder.companyId,
@@ -176,7 +187,6 @@ export default function UsersList({ users }: UsersListProps) {
         throw new Error('Failed to delete reminder');
       }
 
-      // Update the reminders in state
       setUserReminders(prev => {
         const newState = { ...prev };
         Object.keys(newState).forEach(userId => {
@@ -190,11 +200,6 @@ export default function UsersList({ users }: UsersListProps) {
     } finally {
       setDeletingId(null);
     }
-  };
-
-  const handleEditReminder = (reminder: Reminder) => {
-    // TODO: Implement edit functionality
-    console.log('Edit reminder:', reminder);
   };
 
   return (
@@ -248,16 +253,16 @@ export default function UsersList({ users }: UsersListProps) {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {loadingReminders[user.id] ? (
                 <Typography color="text.secondary">Loading reminders...</Typography>
-              ) : userReminders[user.id]?.length ? (
-                <TableContainer component={Paper}>
+              ) : userReminders[user.id] && userReminders[user.id].length > 0 ? (
+                <TableContainer component={Paper} sx={{ mt: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Company</TableCell>
-                        <TableCell>User ID</TableCell>
-                        <TableCell>Days Between</TableCell>
+                        <TableCell>Company User ID</TableCell>
+                        <TableCell>Days</TableCell>
                         <TableCell>Last Reminder</TableCell>
-                        <TableCell>Next Due Date</TableCell>
+                        <TableCell>Due Date</TableCell>
                         <TableCell>Status</TableCell>
                         <TableCell>Actions</TableCell>
                       </TableRow>
@@ -267,16 +272,16 @@ export default function UsersList({ users }: UsersListProps) {
                         <ReminderRow
                           key={reminder.id}
                           reminder={reminder}
-                          onDelete={handleDeleteReminder}
+                          onDelete={handleDeleteReminder} 
                           onSend={handleSendReminder}
-                          isDeleting={deletingId === reminder.id}
+                          isDeleting={deletingId === reminder.id || sendingId === reminder.id}
                         />
                       ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
               ) : (
-                <Typography color="text.secondary">No reminders found</Typography>
+                <Typography color="text.secondary">No reminders found for this user.</Typography>
               )}
             </Box>
           </AccordionDetails>
