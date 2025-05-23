@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/auth';
 import { isAdmin } from '@/server/adminUsers';
 import { sql } from '@vercel/postgres';
-import { Reminder } from '@/models/Reminder';
+import { Reminder, ReminderDataFromDB } from '@/models/Reminder';
 import { sendEmail } from '@/server/sendgridUtils';
 
 export async function POST(request: Request) {
@@ -44,8 +44,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Reminder not found' }, { status: 404 });
     }
 
-    const reminder = Reminder.fromDB(result.rows[0]);
-    const userEmail = result.rows[0].userEmail;
+    // Cast the row to ReminderDataFromDB before passing to Reminder.fromDB
+    const reminderData = result.rows[0] as ReminderDataFromDB;
+    const reminder = Reminder.fromDB(reminderData);
+    const userEmail = (result.rows[0] as any).userEmail;
 
     // Send the email
     const message = `Hello,\n\nYou have a reminder for ${reminder.companyName}.\n\nPlease take action on this reminder.\n\nBest regards,\nYour Reminder System`;
