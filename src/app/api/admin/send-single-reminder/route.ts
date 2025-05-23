@@ -1,34 +1,31 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/auth';
-import { isAdmin } from '@/server/adminUsers';
 import { sql } from '@vercel/postgres';
 import { Reminder, ReminderDataFromDB } from '@/models/Reminder';
-import { sendEmail } from '@/server/sendgridUtils';
-
-// Define a type for the specific query result for this route
-interface ReminderQueryResult extends ReminderDataFromDB {
-  userEmail: string;
-}
+import { User } from '@/models/User';
+import { getServerSession } from 'next-auth/next';
+import { isAdmin } from '@/server/adminUsers';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    if (!isAdmin(session.user.email)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Check if user is authenticated and admin
+    const session = await getServerSession();
+    if (!session?.user?.email || !isAdmin(session.user.email)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     const { reminderId } = await request.json();
+    
     if (!reminderId) {
-      return NextResponse.json({ error: 'Reminder ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing reminder ID' },
+        { status: 400 }
+      );
     }
 
-    // Fetch the reminder
+    // Get reminder and user details
     const result = await sql`
       SELECT 
         r.id,
@@ -46,33 +43,23 @@ export async function POST(request: Request) {
     `;
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Reminder not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Reminder not found' },
+        { status: 404 }
+      );
     }
 
-    // Cast the row to the specific query result type
-    const queryRow = result.rows[0] as ReminderQueryResult;
-    
-    const reminder = Reminder.fromDB(queryRow); // queryRow is compatible with ReminderDataFromDB
-    const userEmail = queryRow.userEmail;       // Access userEmail directly
+    const reminderData = result.rows[0];
+    const reminder = Reminder.fromDB(reminderData as ReminderDataFromDB);
+    const user = new User(reminderData.userId, reminderData.userEmail);
 
-    // Send the email
-    const message = `Hello,\n\nYou have a reminder for ${reminder.companyName}.\n\nPlease take action on this reminder.\n\nBest regards,\nYour Reminder System`;
+    await user.sendReminderEmail();
 
-    await sendEmail({
-      to: userEmail,
+    return NextResponse.json({
+      success: true,
+      email: reminderData.userEmail,
       subject: `Reminder: ${reminder.companyName}`,
-      text: message,
-      html: message.replace(/\n/g, '<br>')
     });
-
-    // Update the last reminder date
-    await sql`
-      UPDATE reminders
-      SET last_reminder_date = CURRENT_TIMESTAMP
-      WHERE id = ${reminderId}
-    `;
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error sending reminder:', error);
     return NextResponse.json(

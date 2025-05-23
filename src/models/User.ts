@@ -14,7 +14,8 @@ export class User {
   }
 
   async getDueReminders(): Promise<UserReminders> {
-    const response = await fetch(`/api/reminders/due-today`);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/reminders/due-today`);
     if (!response.ok) {
       throw new Error('Failed to fetch due reminders');
     }

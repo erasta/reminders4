@@ -100,11 +100,23 @@ export default function UsersList({ users }: UsersListProps) {
         body: JSON.stringify({ reminderId: reminder.id }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to send reminder');
+        throw new Error(data.error || 'Failed to send reminder');
       }
 
-      alert('Reminder sent successfully');
+      const timestamp = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      alert(`Reminder sent successfully\n\nTo: ${data.email}\nSubject: ${data.subject}\nSent at: ${timestamp}`);
     } catch (error) {
       console.error('Error sending reminder:', error);
       alert(error instanceof Error ? error.message : 'Failed to send reminder');
