@@ -69,7 +69,9 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
       return;
     }
     try {
-      const userCount = await sendAllReminders(dueTodayReminders);
+      // Convert Reminder instances to plain JSON objects
+      const plainDueTodayReminders = dueTodayReminders.map(r => r.toJSON());
+      const userCount = await sendAllReminders(plainDueTodayReminders);
       alert(`Sent reminders due today to ${userCount} user(s).`);
     } catch (err) {
       alert(`Failed to send reminders due today: ${(err instanceof Error ? err.message : String(err))}`);
@@ -82,7 +84,9 @@ export default function RemindersList({ reminders, error }: RemindersListProps) 
       return;
     }
     try {
-      const userCount = await sendAllReminders(overdueReminders);
+      // Convert Reminder instances to plain JSON objects
+      const plainOverdueReminders = overdueReminders.map(r => r.toJSON());
+      const userCount = await sendAllReminders(plainOverdueReminders);
       alert(`Sent overdue reminders to ${userCount} user(s).`);
     } catch (err) {
       alert(`Failed to send overdue reminders: ${(err instanceof Error ? err.message : String(err))}`);

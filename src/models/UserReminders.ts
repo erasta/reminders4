@@ -19,7 +19,7 @@ export class UserReminders {
     return this.dueReminders.length > 0;
   }
 
-  async sendEmail(): Promise<void> {
+  async sendEmail(recipientEmail: string): Promise<void> {
     if (!this.hasDueReminders) return;
 
     const reminderList = this.dueReminders
@@ -28,13 +28,17 @@ export class UserReminders {
     
     const message = `Hello,\n\nYou have the following reminders due today:\n\n${reminderList}\n\nPlease take action on these reminders.\n\nBest regards,\nYour Reminder System`;
 
-    const response = await fetch('/api/send-reminder-email', {
+    // Construct absolute URL for server-side fetch
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/send-reminder-email`;
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: this.userId,
+        to: recipientEmail,
         subject: 'Reminder: Companies Due Today',
         text: message,
         html: message.replace(/\n/g, '<br>')
