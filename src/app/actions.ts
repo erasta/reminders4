@@ -38,33 +38,33 @@ export async function getAllUsers() {
 
 export async function getRemindersDueToday() {
   try {
-    // Query to get reminders due today - using a simpler approach
+    // Query to get reminders due today, aliasing to camelCase for Reminder.fromDB
     const result = await sql.query(
       `SELECT 
         r.id, 
-        r.company_id, 
-        r.company_name, 
-        r.company_user_id, 
-        r.days_between_reminders, 
-        r.last_reminder_date,
-        CURRENT_DATE as today_date,
-        u.email as user_email
+        r.user_id as "userId",
+        r.company_id as "companyId", 
+        r.company_name as "companyName", 
+        r.company_user_id as "companyUserId", 
+        r.days_between_reminders as "daysBetweenReminders", 
+        r.last_reminder_date as "lastReminderDate",
+        r.created_at as "createdAt"
        FROM reminders r
        JOIN users u ON r.user_id = u.id
        WHERE r.last_reminder_date IS NOT NULL
-         AND DATE(r.last_reminder_date + (r.days_between_reminders || ' days')::interval) = CURRENT_DATE
+         AND DATE(r.last_reminder_date + (r.days_between_reminders || ' days')::interval) <= CURRENT_DATE
        ORDER BY r.company_name`
     );
     
-    // Calculate the due date in JavaScript for more control
-    const remindersWithDueDate = result.rows.map(reminder => {
-      const lastReminderDate = new Date(reminder.last_reminder_date);
+    // Calculate the due date in JavaScript using camelCase properties
+    const remindersWithDueDate = result.rows.map(row => {
+      const lastReminderDate = new Date(row.lastReminderDate);
       const dueDate = new Date(lastReminderDate);
-      dueDate.setDate(dueDate.getDate() + reminder.days_between_reminders);
+      dueDate.setDate(dueDate.getDate() + row.daysBetweenReminders);
       
       return {
-        ...reminder,
-        date_due: dueDate.toISOString()
+        ...row, // row now contains camelCase fields from the SQL query
+        date_due: dueDate.toISOString() // This extra field is for potential use, not by Reminder.fromDB
       };
     });
     
