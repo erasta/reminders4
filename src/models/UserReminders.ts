@@ -36,43 +36,68 @@ export class UserReminders {
   }
 
   async sendEmail(recipientEmail: string): Promise<void> {
-    if (!this.hasDueReminders) return;
+    if (!this.hasDueReminders) {
+      console.log('No due reminders found, returning early');
+      return;
+    }
 
     const dueRemindersToSend = [...this.dueReminders];
-
     const reminderList = dueRemindersToSend
       .map(reminder => reminder.getEmailMessage())
       .join('\n');
     
-    const message = `Hello,\n\nYou have the following reminders due today:\n\n${reminderList}\n\nPlease take action on these reminders.\n\nBest regards,\nYour Reminder System`;
+    const timestamp = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    const message = `Hello,\n\nYou have the following reminders due today:\n\n${reminderList}\n\nPlease take action on these reminders.\n\nBest regards,\nYour Reminder System\n\nEmail sent at: ${timestamp}`;
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const apiUrl = `${baseUrl}/api/send-reminder-email`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: recipientEmail,
-        subject: 'Reminder: Companies Due Today',
-        text: message,
-        html: message.replace(/\n/g, '<br>')
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to send reminder email. Status: ${response.status}`);
-    }
+    console.log('Sending email request to:', apiUrl);
 
     try {
-      for (const reminder of dueRemindersToSend) {
-        await sql`UPDATE reminders SET last_reminder_date = CURRENT_TIMESTAMP WHERE id = ${reminder.id};`;
-        console.log(`Updated last_reminder_date for reminder ID: ${reminder.id}`);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: recipientEmail,
+          subject: 'Reminder: Companies Due Today',
+          text: message,
+          html: message.replace(/\n/g, '<br>')
+        })
+      });
+
+      console.log('Email API response status:', response.status);
+      const responseData = await response.json();
+      console.log('Email API response data:', responseData);
+
+      if (!response.ok) {
+        throw new Error(`Failed to send reminder email. Status: ${response.status}, Response: ${JSON.stringify(responseData)}`);
       }
-    } catch (dbError) {
-      console.error('Failed to update last_reminder_date after sending email:', dbError);
+
+      console.log('Email sent successfully, updating reminder dates...');
+      try {
+        for (const reminder of dueRemindersToSend) {
+          await sql`UPDATE reminders SET last_reminder_date = CURRENT_TIMESTAMP WHERE id = ${reminder.id};`;
+          console.log(`Updated last_reminder_date for reminder ID: ${reminder.id}`);
+        }
+        console.log('All reminder dates updated successfully');
+      } catch (dbError) {
+        console.error('Failed to update last_reminder_date after sending email:', dbError);
+        throw dbError;
+      }
+    } catch (error) {
+      console.error('Error in sendEmail:', error);
+      throw error;
     }
   }
 

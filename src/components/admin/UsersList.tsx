@@ -63,21 +63,24 @@ export default function UsersList({ users }: UsersListProps) {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [sendingAllForUser, setSendingAllForUser] = useState<string | null>(null);
 
-  const handleSendTestEmail = async (email: string) => {
+  const handleSendTestEmail = async (userId: string, email: string) => {
     try {
+      console.log('Sending test email for:', { userId, email });
       const response = await fetch('/api/admin/send-test-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ userId, email }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to send test email');
+        throw new Error(data.error || 'Failed to send test email');
       }
 
-      alert('Test email sent successfully');
+      alert(data.message || 'Test email sent successfully');
     } catch (error) {
       console.error('Error sending test email:', error);
       alert(error instanceof Error ? error.message : 'Failed to send test email');
@@ -243,7 +246,7 @@ export default function UsersList({ users }: UsersListProps) {
             <Tooltip title="Send Test Email">
               <IconButton
                 size="small"
-                onClick={() => handleSendTestEmail(user.email)}
+                onClick={() => handleSendTestEmail(user.id, user.email)}
               >
                 <EmailIcon />
               </IconButton>
