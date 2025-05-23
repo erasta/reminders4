@@ -13,7 +13,8 @@ import {
   Typography,
   Paper,
 } from '@mui/material';
-import { Company, Reminder } from '@/types/reminder';
+import { Company } from '@/types/company';
+import { Reminder } from '@/models/Reminder';
 
 type AddReminderProps = {
   companies: Company[];
@@ -53,7 +54,11 @@ export default function AddReminder({
       setCompanyId(editingReminder.companyId);
       setCompanyUserId(editingReminder.companyUserId || '');
       setDaysBetweenReminders(editingReminder.daysBetweenReminders?.toString() || '');
-      setLastReminderDate(editingReminder.lastReminderDate || '');
+      setLastReminderDate(
+        editingReminder.lastReminderDate 
+          ? new Date(editingReminder.lastReminderDate).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      );
       setSelectedCompany(companies.find(c => c.id === editingReminder.companyId) || null);
     }
   }, [editingReminder, companies]);

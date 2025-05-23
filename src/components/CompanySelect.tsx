@@ -1,4 +1,4 @@
-import { Company } from '@/types/reminder';
+import { Company } from '@/types/company';
 
 interface CompanySelectProps {
   companies: Company[];

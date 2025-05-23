@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { Reminder } from '../models/Reminder';
 
 export async function getTexts(userId: string) {
   try {
@@ -66,7 +67,7 @@ export async function getReminders(userId: string) {
       WHERE r.user_id = ${userId} 
       ORDER BY r.created_at DESC
     `;
-    return result.rows;
+    return result.rows.map(row => Reminder.fromDB(row));
   } catch (error) {
     console.error('Error fetching reminders:', error);
     throw error;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import DaysInput from './DaysInput';
 import CompanyUserIdInput from './CompanyUserIdInput';
 import LastReminderDateInput from './LastReminderDateInput';
-import { Reminder } from '@/types/reminder';
+import { Reminder } from '@/models/Reminder';
 
 interface EditReminderProps {
   reminder: Reminder;
