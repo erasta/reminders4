@@ -48,7 +48,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No due reminders found' }, { status: 404 });
     }
 
-    const reminders = result.rows.map(row => Reminder.fromDB(row));
+    const reminders = result.rows.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      companyId: row.companyId, 
+      companyName: row.companyName,
+      companyUserId: row.companyUserId,
+      daysBetweenReminders: row.daysBetweenReminders,
+      lastReminderDate: row.lastReminderDate,
+      createdAt: row.createdAt
+    })).map(row => Reminder.fromDB(row));
     const userEmail = result.rows[0].userEmail;
 
     // Create the email message

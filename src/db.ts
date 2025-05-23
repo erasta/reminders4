@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { Reminder } from './models/Reminder';
+import { Reminder, ReminderDataFromDB } from './models/Reminder';
 
 export type Text = {
   id: number;
@@ -78,7 +78,7 @@ export async function getReminders(userEmail: string) {
       WHERE u.email = ${userEmail}
       ORDER BY r.created_at DESC
     `;
-    return result.rows.map(row => Reminder.fromDB(row));
+    return result.rows.map(row => Reminder.fromDB(row as ReminderDataFromDB));
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch reminders.');
@@ -155,7 +155,7 @@ export async function addReminder({ userEmail, companyId, companyName, companyUs
       throw new Error('Failed to create reminder');
     }
     
-    return Reminder.fromDB(result.rows[0]);
+    return Reminder.fromDB(result.rows[0] as ReminderDataFromDB);
   } catch (error) {
     console.error('Database Error:', error);
     throw error instanceof Error ? error : new Error('Failed to add reminder');
@@ -178,7 +178,7 @@ export async function updateLastReminderDate(reminderId: string) {
         last_reminder_date as "lastReminderDate",
         created_at as "createdAt"
     `;
-    return Reminder.fromDB(result.rows[0]);
+    return Reminder.fromDB(result.rows[0] as ReminderDataFromDB);
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to update reminder.');
@@ -233,7 +233,7 @@ export async function updateReminder({ reminderId, companyUserId, daysBetweenRem
     }
     
     const result = await query;
-    return Reminder.fromDB(result.rows[0]);
+    return Reminder.fromDB(result.rows[0] as ReminderDataFromDB);
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to update reminder.');

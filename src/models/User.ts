@@ -37,7 +37,7 @@ export class User {
   async sendReminderEmail(): Promise<void> {
     const userReminders = await this.getDueReminders();
     if (userReminders.hasDueReminders) {
-      await userReminders.sendEmail();
+      await userReminders.sendEmail(this.email);
     }
   }
 

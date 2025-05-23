@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/auth';
 import { isAdmin } from '@/server/adminUsers';
 import { sql } from '@vercel/postgres';
-import { Reminder } from '@/models/Reminder';
 
 export async function GET(request: Request) {
   try {
@@ -41,7 +40,16 @@ export async function GET(request: Request) {
       ORDER BY r.created_at DESC
     `;
 
-    const reminders = result.rows.map(row => Reminder.fromDB(row));
+    const reminders = result.rows.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      companyId: row.companyId,
+      companyName: row.companyName,
+      companyUserId: row.companyUserId,
+      daysBetweenReminders: row.daysBetweenReminders,
+      lastReminderDate: row.lastReminderDate,
+      createdAt: row.createdAt
+    }));
     return NextResponse.json(reminders);
   } catch (error) {
     console.error('Error fetching user reminders:', error);
