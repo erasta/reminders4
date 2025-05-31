@@ -8,10 +8,12 @@ import ReminderList from './ReminderList';
 import { Company } from '@/types/company';
 import { Reminder } from '@/models/Reminder';
 import { useLoading } from './LoadingContext';
+import { useTranslation } from 'react-i18next';
 
 export default function ReminderManager() {
   const { data: session } = useSession();
   const { setIsLoading } = useLoading();
+  const { t } = useTranslation();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export default function ReminderManager() {
         // Fetch companies
         const companiesResponse = await fetch('/api/companies');
         if (!companiesResponse.ok) {
-          throw new Error('Failed to fetch companies');
+          throw new Error(t('reminders.fetchCompaniesError'));
         }
         const companiesData = await companiesResponse.json();
         setCompanies(Array.isArray(companiesData) ? companiesData : []);
@@ -39,13 +41,13 @@ export default function ReminderManager() {
         // Fetch reminders
         const remindersResponse = await fetch('/api/reminders');
         if (!remindersResponse.ok) {
-          throw new Error('Failed to fetch reminders');
+          throw new Error(t('reminders.fetchRemindersError'));
         }
         const remindersData = await remindersResponse.json();
         setReminders(Array.isArray(remindersData) ? remindersData : []);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError('Failed to load data: ' + (error instanceof Error ? error.message : String(error)));
+        setError(error instanceof Error ? error.message : t('reminders.fetchError'));
       } finally {
         setLoading(false);
         setIsLoading(false);
@@ -53,10 +55,12 @@ export default function ReminderManager() {
     }
     
     fetchData();
-  }, [session, setIsLoading]);
+  }, [session, setIsLoading, t]);
 
   const handleReminderAdded = (newReminder: Reminder) => {
     setReminders(prevReminders => [newReminder, ...prevReminders]);
+    setError(null);
+    setEditingReminder(null);
   };
 
   const handleReminderEdited = (updatedReminder: Reminder) => {
@@ -65,6 +69,7 @@ export default function ReminderManager() {
         reminder.id === updatedReminder.id ? updatedReminder : reminder
       )
     );
+    setError(null);
     setEditingReminder(null);
   };
 
@@ -72,6 +77,7 @@ export default function ReminderManager() {
     setReminders(prevReminders => 
       prevReminders.filter(reminder => reminder.id !== reminderId)
     );
+    setError(null);
   };
 
   const handleEditClick = (reminder: Reminder) => {
@@ -80,13 +86,14 @@ export default function ReminderManager() {
 
   const handleCancelEdit = () => {
     setEditingReminder(null);
+    setError(null);
   };
 
   if (!session) {
     return (
       <Box sx={{ textAlign: 'center', py: 4 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
-          Please sign in to manage your reminders
+          {t('auth.signInRequired')}
         </Typography>
       </Box>
     );
@@ -102,7 +109,7 @@ export default function ReminderManager() {
       
       <Box sx={{ mb: 4, opacity: loading ? 0.5 : 1, pointerEvents: loading ? 'none' : 'auto' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          {editingReminder ? 'Edit Reminder' : 'Add New Reminder'}
+          {editingReminder ? t('reminders.editReminder') : t('reminders.addReminder')}
         </Typography>
         <AddReminder 
           companies={companies} 
@@ -117,7 +124,7 @@ export default function ReminderManager() {
 
       <Box sx={{ opacity: loading ? 0.5 : 1, pointerEvents: loading ? 'none' : 'auto' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          My Reminders
+          {t('reminders.myReminders')}
         </Typography>
         <ReminderList 
           reminders={reminders} 

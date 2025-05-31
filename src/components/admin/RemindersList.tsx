@@ -18,6 +18,7 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import { Reminder } from '@/models/Reminder';
 import ReminderRow from '../ReminderRow';
+import { useTranslation } from 'react-i18next';
 
 type RemindersListProps = {
   reminders: Reminder[];
@@ -32,6 +33,8 @@ type RemindersListProps = {
 // }
 
 export default function RemindersList({ reminders, error, onRemindersSent }: RemindersListProps) {
+  const { t } = useTranslation();
+
   // const handleSendReminders = async () => { // Old combined handler
   //   try {
   //     const userCount = await sendAllReminders(); // This would now need a list
@@ -104,7 +107,7 @@ export default function RemindersList({ reminders, error, onRemindersSent }: Rem
             {title}
           </Typography>
           <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-            No reminders in this category.
+            {t('reminders.noReminders')}
           </Typography>
         </Box>
       );
@@ -119,14 +122,13 @@ export default function RemindersList({ reminders, error, onRemindersSent }: Rem
           <Table>
             <TableHead>
               <TableRow>
-                {/* Columns from ReminderRow */}
-                <TableCell>Company</TableCell>
-                <TableCell>Company User ID</TableCell>
-                <TableCell>Days</TableCell>
-                <TableCell>Last Reminder</TableCell>
-                <TableCell>Due Date</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t('reminders.company')}</TableCell>
+                <TableCell>{t('reminders.companyUser')}</TableCell>
+                <TableCell>{t('reminders.daysBetweenReminders')}</TableCell>
+                <TableCell>{t('reminders.lastReminderDate')}</TableCell>
+                <TableCell>{t('reminders.nextDueDate')}</TableCell>
+                <TableCell>{t('reminders.status')}</TableCell>
+                <TableCell>{t('common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -151,7 +153,7 @@ export default function RemindersList({ reminders, error, onRemindersSent }: Rem
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
         <Typography variant="h5" sx={{ mb: { xs: 1, sm: 0} }}> 
-          Due Reminders Overview
+          {t('reminders.dueRemindersOverview')}
         </Typography>
         {/* Button group for sending reminders */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap'}}>
@@ -162,7 +164,7 @@ export default function RemindersList({ reminders, error, onRemindersSent }: Rem
             onClick={handleSendDueTodayReminders} // New handler
             disabled={dueTodayReminders.length === 0}
           >
-            Send Due Today ({dueTodayReminders.length})
+            {t('reminders.sendDueToday', { count: dueTodayReminders.length })}
           </Button>
           <Button
             variant="contained"
@@ -171,7 +173,7 @@ export default function RemindersList({ reminders, error, onRemindersSent }: Rem
             onClick={handleSendOverdueReminders} // New handler
             disabled={overdueReminders.length === 0}
           >
-            Send Overdue ({overdueReminders.length})
+            {t('reminders.sendOverdue', { count: overdueReminders.length })}
           </Button>
         </Box>
       </Box>
@@ -182,9 +184,9 @@ export default function RemindersList({ reminders, error, onRemindersSent }: Rem
         </Alert>
       ) : (
         <>
-          {renderRemindersTable('Reminders Due Today', dueTodayReminders)}
+          {renderRemindersTable(t('reminders.dueToday'), dueTodayReminders)}
           <Divider sx={{ my: 4 }} />
-          {renderRemindersTable('Overdue Reminders', overdueReminders)}
+          {renderRemindersTable(t('reminders.overdue'), overdueReminders)}
         </>
       )}
     </Box>

@@ -8,7 +8,8 @@
     "delete": "Delete",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "actions": "Actions"
   },
   "reminders": {
     "addReminder": "Add Reminder",
@@ -22,11 +23,32 @@
     "isDue": "Due",
     "notDue": "Not Due",
     "selectCompany": "Select a company first",
-    "fixedByPolicy": "Days are fixed by company policy"
+    "fixedByPolicy": "Days are fixed by company policy",
+    "noReminders": "No reminders in this category",
+    "dueRemindersOverview": "Due Reminders Overview",
+    "sendDueToday": "Send Due Today ({{count}})",
+    "sendOverdue": "Send Overdue ({{count}})",
+    "dueToday": "Reminders Due Today",
+    "overdue": "Overdue Reminders",
+    "status": "Status",
+    "notAssigned": "Not assigned",
+    "never": "Never",
+    "notSet": "Not set",
+    "daysLeft": "{{days}} days left",
+    "send": "Send Reminder",
+    "days": "days",
+    "updateError": "Failed to update reminder",
+    "createError": "Failed to create reminder",
+    "saveError": "Failed to save reminder",
+    "fetchCompaniesError": "Failed to fetch companies",
+    "fetchRemindersError": "Failed to fetch reminders",
+    "fetchError": "Failed to load data",
+    "myReminders": "My Reminders"
   },
   "auth": {
     "login": "Login",
     "logout": "Logout",
-    "admin": "Admin"
+    "admin": "Admin",
+    "signInRequired": "Please sign in to manage your reminders"
   }
 } 

@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Company } from '@/types/company';
 import { Reminder } from '@/models/Reminder';
+import { useTranslation } from 'react-i18next';
 
 type AddReminderProps = {
   companies: Company[];
@@ -32,137 +33,78 @@ export default function AddReminder({
   onCancel 
 }: AddReminderProps) {
   const { data: session } = useSession();
-  const [companyId, setCompanyId] = useState('');
-  const [companyUserId, setCompanyUserId] = useState(session?.user?.email || '');
-  const [daysBetweenReminders, setDaysBetweenReminders] = useState('');
-  const [lastReminderDate, setLastReminderDate] = useState(new Date().toISOString().split('T')[0]);
+  const { t } = useTranslation();
+  const [companyId, setCompanyId] = useState(editingReminder?.companyId || '');
+  const [companyUserId, setCompanyUserId] = useState(editingReminder?.companyUserId || '');
+  const [daysBetweenReminders, setDaysBetweenReminders] = useState(editingReminder?.daysBetweenReminders?.toString() || '');
+  const [lastReminderDate, setLastReminderDate] = useState(
+    editingReminder?.lastReminderDate 
+      ? new Date(editingReminder.lastReminderDate).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+  );
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(
+    editingReminder 
+      ? companies.find(c => c.id === editingReminder.companyId) || null
+      : null
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [errors, setErrors] = useState<{ companyId?: string; companyUserId?: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Set today's date as default for lastReminderDate
   useEffect(() => {
-    if (!editingReminder && !lastReminderDate) {
-      const today = new Date().toISOString().split('T')[0];
-      setLastReminderDate(today);
-    }
-  }, [editingReminder, lastReminderDate]);
-
-  // Initialize form with editing reminder data
-  useEffect(() => {
-    if (editingReminder) {
-      setCompanyId(editingReminder.companyId);
-      setCompanyUserId(editingReminder.companyUserId || '');
-      setDaysBetweenReminders(editingReminder.daysBetweenReminders?.toString() || '');
-      setLastReminderDate(
-        editingReminder.lastReminderDate 
-          ? new Date(editingReminder.lastReminderDate).toISOString().split('T')[0]
-          : new Date().toISOString().split('T')[0]
-      );
-      setSelectedCompany(companies.find(c => c.id === editingReminder.companyId) || null);
-    }
-  }, [editingReminder, companies]);
-
-  // Reset form when company changes (only in add mode)
-  useEffect(() => {
-    if (!editingReminder) {
-      setDaysBetweenReminders('');
-      // Don't reset lastReminderDate here as we want to keep today's date
-    }
-  }, [companyId, editingReminder]);
-
-  // Update days between reminders when company changes
-  useEffect(() => {
-    if (!editingReminder && companyId) {
+    if (companyId) {
       const company = companies.find(c => c.id === companyId);
       setSelectedCompany(company || null);
-      if (company) {
-        setDaysBetweenReminders(company.days_before_deactivation?.toString() || '120');
-      }
+    } else {
+      setSelectedCompany(null);
     }
-  }, [companyId, companies, editingReminder]);
-
-  const validateForm = () => {
-    const newErrors: { companyId?: string; companyUserId?: string } = {};
-    
-    if (!companyId) {
-      newErrors.companyId = 'Company is required';
-    }
-    
-    if (!companyUserId.trim()) {
-      newErrors.companyUserId = 'Company User ID is required';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, [companyId, companies]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onError(''); // Clear any existing error
-    if (!session?.user?.email) {
-      onError('You must be signed in to add a reminder');
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
+    setErrors({});
+
     try {
-      const url = '/api/reminders';
-      const method = editingReminder ? 'PUT' : 'POST';
-      
-      const selectedCompany = companies.find(c => c.id === companyId);
-      if (!selectedCompany) {
-        throw new Error('Selected company not found');
-      }
+      const reminderData = {
+        companyId,
+        companyUserId,
+        daysBetweenReminders: parseInt(daysBetweenReminders),
+        lastReminderDate: new Date(lastReminderDate),
+      };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...(editingReminder && { reminderId: editingReminder.id }),
-          companyId,
-          companyName: selectedCompany.name,
-          companyUserId: companyUserId.trim(),
-          daysBetweenReminders: parseInt(daysBetweenReminders.toString()),
-          lastReminderDate: lastReminderDate || null,
-          userEmail: session.user.email,
-        }),
-      });
+      if (editingReminder) {
+        // Update existing reminder
+        const response = await fetch(`/api/reminders/${editingReminder.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reminderData),
+        });
 
-      let errorMessage = `Failed to ${editingReminder ? 'update' : 'create'} reminder`;
-      
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          // If response is not JSON, try to get the text
-          try {
-            const textError = await response.text();
-            errorMessage = textError || errorMessage;
-          } catch {
-            // If we can't get the text either, use the status text
-            errorMessage = response.statusText || errorMessage;
-          }
+        if (!response.ok) {
+          throw new Error(t('reminders.updateError'));
         }
-        throw new Error(errorMessage);
-      }
 
-      let reminder;
-      try {
-        reminder = await response.json();
-      } catch {
-        throw new Error('Invalid response from server');
-      }
+        const updatedReminder = await response.json();
+        onReminderAdded(updatedReminder);
+      } else {
+        // Create new reminder
+        const response = await fetch('/api/reminders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reminderData),
+        });
 
-      onReminderAdded(reminder);
+        if (!response.ok) {
+          throw new Error(t('reminders.createError'));
+        }
+
+        const newReminder = await response.json();
+        onReminderAdded(newReminder);
+      }
 
       // Reset form
       setCompanyId('');
@@ -173,7 +115,7 @@ export default function AddReminder({
       setErrors({});
     } catch (error) {
       console.error('Error saving reminder:', error);
-      onError(error instanceof Error ? error.message : `Failed to ${editingReminder ? 'update' : 'create'} reminder`);
+      onError(error instanceof Error ? error.message : t('reminders.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -192,17 +134,17 @@ export default function AddReminder({
     <Paper sx={{ p: 3 }}>
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <FormControl fullWidth error={!!errors.companyId} size="small">
-          <InputLabel>Company</InputLabel>
+          <InputLabel>{t('reminders.company')}</InputLabel>
           <Select
             value={companyId}
-            label="Company"
+            label={t('reminders.company')}
             onChange={(e) => setCompanyId(e.target.value)}
             required
             disabled={!!editingReminder}
           >
             {companies.map((company) => (
               <MenuItem key={company.id} value={company.id}>
-                {company.name} ({company.days_before_deactivation || 120} days)
+                {company.name} ({company.days_before_deactivation || 120} {t('reminders.days')})
               </MenuItem>
             ))}
           </Select>
@@ -214,7 +156,7 @@ export default function AddReminder({
         </FormControl>
 
         <TextField
-          label="Company User ID"
+          label={t('reminders.companyUser')}
           value={companyUserId}
           onChange={(e) => setCompanyUserId(e.target.value)}
           fullWidth
@@ -225,7 +167,7 @@ export default function AddReminder({
         />
 
         <TextField
-          label="Days Between Reminders"
+          label={t('reminders.daysBetweenReminders')}
           type="number"
           value={daysBetweenReminders}
           onChange={(e) => setDaysBetweenReminders(e.target.value)}
@@ -233,12 +175,12 @@ export default function AddReminder({
           fullWidth
           inputProps={{ min: 1 }}
           disabled={!companyId || isDaysFieldDisabled}
-          helperText={isDaysFieldDisabled ? "Days are fixed by company policy" : !companyId ? "Select a company first" : undefined}
+          helperText={isDaysFieldDisabled ? t('reminders.fixedByPolicy') : !companyId ? t('reminders.selectCompany') : undefined}
           size="small"
         />
 
         <TextField
-          label="Last Reminder Date"
+          label={t('reminders.lastReminderDate')}
           type="date"
           value={lastReminderDate}
           onChange={(e) => setLastReminderDate(e.target.value)}
@@ -258,7 +200,7 @@ export default function AddReminder({
             sx={{ flex: 1 }}
             size="small"
           >
-            {isLoading ? 'Saving...' : editingReminder ? 'Save Changes' : 'Add Reminder'}
+            {isLoading ? t('common.loading') : editingReminder ? t('common.save') : t('reminders.addReminder')}
           </Button>
           {editingReminder && onCancel && (
             <Button
@@ -268,7 +210,7 @@ export default function AddReminder({
               disabled={isLoading}
               size="small"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           )}
         </Box>

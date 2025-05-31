@@ -11,6 +11,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import { Reminder } from '@/models/Reminder';
+import { useTranslation } from 'react-i18next';
 
 type ReminderRowProps = {
   reminder: Reminder;
@@ -21,36 +22,37 @@ type ReminderRowProps = {
 };
 
 export default function ReminderRow({ reminder, onEdit, onDelete, onSend, isDeleting }: ReminderRowProps) {
+  const { t } = useTranslation();
   const nextDueDate = reminder.getNextDueDate();
   const daysUntilDue = reminder.getDaysUntilDue();
 
   return (
     <TableRow>
       <TableCell>{reminder.companyName}</TableCell>
-      <TableCell>{reminder.companyUserId || 'Not assigned'}</TableCell>
+      <TableCell>{reminder.companyUserId || t('reminders.notAssigned')}</TableCell>
       <TableCell>{reminder.daysBetweenReminders}</TableCell>
       <TableCell>
         {reminder.lastReminderDate instanceof Date 
           ? reminder.lastReminderDate.toLocaleDateString()
           : reminder.lastReminderDate 
             ? new Date(reminder.lastReminderDate).toLocaleDateString()
-            : 'Never'}
+            : t('reminders.never')}
       </TableCell>
       <TableCell>
-        {nextDueDate ? nextDueDate.toLocaleDateString() : 'Not set'}
+        {nextDueDate ? nextDueDate.toLocaleDateString() : t('reminders.notSet')}
       </TableCell>
       <TableCell>
         {reminder.isDue() ? (
           reminder.getDaysUntilDue() === 0 ? (
-            <Typography color="primary.main">Due Today</Typography>
+            <Typography color="primary.main">{t('reminders.dueToday')}</Typography>
           ) : (
-            <Typography color="error">Overdue</Typography>
+            <Typography color="error">{t('reminders.overdue')}</Typography>
           )
         ) : (
           <Typography color="text.secondary">
             {daysUntilDue !== null 
-              ? `${daysUntilDue} days left`
-              : 'Not set'}
+              ? t('reminders.daysLeft', { days: daysUntilDue })
+              : t('reminders.notSet')}
           </Typography>
         )}
       </TableCell>
@@ -60,28 +62,28 @@ export default function ReminderRow({ reminder, onEdit, onDelete, onSend, isDele
             <IconButton
               size="small"
               onClick={() => onEdit(reminder)}
-              color="primary"
+              title={t('common.edit')}
             >
               <EditIcon />
-            </IconButton>
-          )}
-          {onSend && (
-            <IconButton
-              size="small"
-              onClick={() => onSend(reminder)}
-              color="primary"
-            >
-              <SendIcon />
             </IconButton>
           )}
           <IconButton
             size="small"
             onClick={() => onDelete(reminder.id)}
             disabled={isDeleting}
-            color="error"
+            title={t('common.delete')}
           >
             <DeleteIcon />
           </IconButton>
+          {onSend && (
+            <IconButton
+              size="small"
+              onClick={() => onSend(reminder)}
+              title={t('reminders.send')}
+            >
+              <SendIcon />
+            </IconButton>
+          )}
         </Box>
       </TableCell>
     </TableRow>

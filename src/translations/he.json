@@ -8,7 +8,8 @@
     "delete": "מחק",
     "loading": "טוען...",
     "error": "שגיאה",
-    "success": "הצלחה"
+    "success": "הצלחה",
+    "actions": "פעולות"
   },
   "reminders": {
     "addReminder": "הוסף תזכורת",
@@ -22,11 +23,32 @@
     "isDue": "במועד",
     "notDue": "לא במועד",
     "selectCompany": "בחר חברה תחילה",
-    "fixedByPolicy": "הימים קבועים על ידי מדיניות החברה"
+    "fixedByPolicy": "הימים קבועים על ידי מדיניות החברה",
+    "noReminders": "אין תזכורות בקטגוריה זו",
+    "dueRemindersOverview": "סקירת תזכורות במועד",
+    "sendDueToday": "שלח תזכורות להיום ({{count}})",
+    "sendOverdue": "שלח תזכורות באיחור ({{count}})",
+    "dueToday": "תזכורות להיום",
+    "overdue": "תזכורות באיחור",
+    "status": "סטטוס",
+    "notAssigned": "לא מוקצה",
+    "never": "אף פעם",
+    "notSet": "לא נקבע",
+    "daysLeft": "נותרו {{days}} ימים",
+    "send": "שלח תזכורת",
+    "days": "ימים",
+    "updateError": "שגיאה בעדכון התזכורת",
+    "createError": "שגיאה ביצירת התזכורת",
+    "saveError": "שגיאה בשמירת התזכורת",
+    "fetchCompaniesError": "שגיאה בטעינת החברות",
+    "fetchRemindersError": "שגיאה בטעינת התזכורות",
+    "fetchError": "שגיאה בטעינת הנתונים",
+    "myReminders": "התזכורות שלי"
   },
   "auth": {
     "login": "התחברות",
     "logout": "התנתקות",
-    "admin": "מנהל"
+    "admin": "מנהל",
+    "signInRequired": "יש להתחבר כדי לנהל את התזכורות שלך"
   }
 } 
