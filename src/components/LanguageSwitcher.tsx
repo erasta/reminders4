@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@mui/material';
 import TranslateIcon from '@mui/icons-material/Translate';
 
 const LanguageSwitcher = () => {
-  const [currentLang, setCurrentLang] = useState('en');
+  const { i18n } = useTranslation();
 
   const toggleLanguage = () => {
-    // This is a placeholder for future implementation
-    setCurrentLang(currentLang === 'en' ? 'he' : 'en');
+    const newLang = i18n.language === 'en' ? 'he' : 'en';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'he' ? 'rtl' : 'ltr';
   };
 
   return (
@@ -19,7 +20,7 @@ const LanguageSwitcher = () => {
       onClick={toggleLanguage}
       startIcon={<TranslateIcon />}
     >
-      {currentLang === 'en' ? 'עברית' : 'English'}
+      {i18n.language === 'en' ? 'עברית' : 'English'}
     </Button>
   );
 };

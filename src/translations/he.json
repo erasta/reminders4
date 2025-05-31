@@ -1,0 +1,32 @@
+{
+  "common": {
+    "appName": "מערכת תזכורות",
+    "add": "הוסף",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "success": "הצלחה"
+  },
+  "reminders": {
+    "addReminder": "הוסף תזכורת",
+    "editReminder": "ערוך תזכורת",
+    "company": "חברה",
+    "companyUser": "מזהה משתמש בחברה",
+    "daysBetweenReminders": "ימים בין תזכורות",
+    "lastReminderDate": "תאריך תזכורת אחרון",
+    "nextDueDate": "תאריך יעד הבא",
+    "daysUntilDue": "ימים עד היעד",
+    "isDue": "במועד",
+    "notDue": "לא במועד",
+    "selectCompany": "בחר חברה תחילה",
+    "fixedByPolicy": "הימים קבועים על ידי מדיניות החברה"
+  },
+  "auth": {
+    "login": "התחברות",
+    "logout": "התנתקות",
+    "admin": "מנהל"
+  }
+} 

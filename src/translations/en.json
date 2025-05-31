@@ -1,0 +1,32 @@
+{
+  "common": {
+    "appName": "Reminder System",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "reminders": {
+    "addReminder": "Add Reminder",
+    "editReminder": "Edit Reminder",
+    "company": "Company",
+    "companyUser": "Company User ID",
+    "daysBetweenReminders": "Days Between Reminders",
+    "lastReminderDate": "Last Reminder Date",
+    "nextDueDate": "Next Due Date",
+    "daysUntilDue": "Days Until Due",
+    "isDue": "Due",
+    "notDue": "Not Due",
+    "selectCompany": "Select a company first",
+    "fixedByPolicy": "Days are fixed by company policy"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "admin": "Admin"
+  }
+} 

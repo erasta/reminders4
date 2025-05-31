@@ -5,9 +5,11 @@ import LoginButton from './LoginButton';
 import AdminButton from './AdminButton';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 
 export default function AppHeader() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const userName = session?.user?.name || '';
   const userEmail = session?.user?.email || '';
 
@@ -15,7 +17,7 @@ export default function AppHeader() {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Reminder System
+          {t('common.appName')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {session && (

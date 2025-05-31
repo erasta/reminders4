@@ -5,6 +5,7 @@ import { Box } from "@mui/material";
 import AppHeader from "@/components/AppHeader";
 import Providers from "@/components/Providers";
 import { LoadingProvider } from "@/components/LoadingContext";
+import I18nProvider from "@/components/I18nProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,16 +20,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr">
       <body className={inter.className}>
-        <Providers>
-          <LoadingProvider>
-            <AppHeader />
-            <Box component="main" sx={{ p: 2 }}>
-              {children}
-            </Box>
-          </LoadingProvider>
-        </Providers>
+        <I18nProvider>
+          <Providers>
+            <LoadingProvider>
+              <AppHeader />
+              <Box component="main" sx={{ p: 2 }}>
+                {children}
+              </Box>
+            </LoadingProvider>
+          </Providers>
+        </I18nProvider>
       </body>
     </html>
   );
