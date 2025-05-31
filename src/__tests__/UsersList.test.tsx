@@ -31,7 +31,7 @@ jest.mock('@/models/Reminder', () => {
 describe('UsersList (admin)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(global.fetch as jest.Mock).mockImplementation((url, opts) => {
+    ;(global.fetch as jest.Mock).mockImplementation((url) => {
       if (typeof url === 'string' && url.includes('/api/admin/user-reminders')) {
         return Promise.resolve({
           ok: true,
@@ -109,7 +109,7 @@ describe('UsersList (admin)', () => {
     let sendBtns: HTMLElement[] = []
     try {
       sendBtns = screen.getAllByLabelText('Send reminder')
-    } catch (e) {
+    } catch {
       // If not found, skip this test
       return
     }

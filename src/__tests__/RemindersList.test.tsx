@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import RemindersList from '@/components/admin/RemindersList'
 import { Reminder } from '@/models/Reminder'
+import { sendAllReminders } from '@/server/sendAllReminders'
 
 jest.mock('@/server/sendAllReminders', () => ({
   sendAllReminders: jest.fn().mockResolvedValue(['user1'])
@@ -41,7 +42,7 @@ describe('RemindersList (admin)', () => {
     const sendTodayBtn = getByText(/Send Due Today/)
     fireEvent.click(sendTodayBtn)
     await waitFor(() => {
-      expect(require('@/server/sendAllReminders').sendAllReminders).toHaveBeenCalled()
+      expect(sendAllReminders).toHaveBeenCalled()
     })
   })
 
@@ -50,7 +51,7 @@ describe('RemindersList (admin)', () => {
     const sendOverdueBtn = getByText(/Send Overdue/)
     fireEvent.click(sendOverdueBtn)
     await waitFor(() => {
-      expect(require('@/server/sendAllReminders').sendAllReminders).toHaveBeenCalled()
+      expect(sendAllReminders).toHaveBeenCalled()
     })
   })
 
