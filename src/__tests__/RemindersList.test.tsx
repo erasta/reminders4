@@ -3,6 +3,8 @@ import '@testing-library/jest-dom'
 import RemindersList from '@/components/admin/RemindersList'
 import { Reminder } from '@/models/Reminder'
 import { sendAllReminders } from '@/server/sendAllReminders'
+import { I18nextProvider } from 'react-i18next'
+import i18n from '@/i18n'
 
 jest.mock('@/server/sendAllReminders', () => ({
   sendAllReminders: jest.fn().mockResolvedValue(['user1'])
@@ -22,15 +24,23 @@ const mockReminders = [
   new Reminder('3', 'user3', 'c3', 'Company C', null, 10, new Date(), new Date())
 ]
 
+const renderWithI18n = (component: React.ReactElement) => {
+  return render(
+    <I18nextProvider i18n={i18n}>
+      {component}
+    </I18nextProvider>
+  )
+}
+
 describe('RemindersList (admin)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('renders due today and overdue reminders', () => {
-    render(<RemindersList reminders={mockReminders} error={null} onRemindersSent={jest.fn()} />)
-    expect(screen.getByText('Reminders Due Today')).toBeInTheDocument()
-    expect(screen.getByText('Overdue Reminders')).toBeInTheDocument()
+    renderWithI18n(<RemindersList reminders={mockReminders} error={null} onRemindersSent={jest.fn()} />)
+    expect(screen.getAllByText('Reminders Due Today').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Overdue Reminders').length).toBeGreaterThan(0)
     expect(screen.getByText('Company A')).toBeInTheDocument()
     expect(screen.getByText('Company B')).toBeInTheDocument()
     // Company C is not due or overdue, so it should not be in the table
@@ -38,8 +48,8 @@ describe('RemindersList (admin)', () => {
   })
 
   it('calls sendAllReminders with due today reminders', async () => {
-    const { getByText } = render(<RemindersList reminders={mockReminders} error={null} onRemindersSent={jest.fn()} />)
-    const sendTodayBtn = getByText(/Send Due Today/)
+    renderWithI18n(<RemindersList reminders={mockReminders} error={null} onRemindersSent={jest.fn()} />)
+    const sendTodayBtn = screen.getByText(/Send Due Today/)
     fireEvent.click(sendTodayBtn)
     await waitFor(() => {
       expect(sendAllReminders).toHaveBeenCalled()
@@ -47,8 +57,8 @@ describe('RemindersList (admin)', () => {
   })
 
   it('calls sendAllReminders with overdue reminders', async () => {
-    const { getByText } = render(<RemindersList reminders={mockReminders} error={null} onRemindersSent={jest.fn()} />)
-    const sendOverdueBtn = getByText(/Send Overdue/)
+    renderWithI18n(<RemindersList reminders={mockReminders} error={null} onRemindersSent={jest.fn()} />)
+    const sendOverdueBtn = screen.getByText(/Send Overdue/)
     fireEvent.click(sendOverdueBtn)
     await waitFor(() => {
       expect(sendAllReminders).toHaveBeenCalled()
@@ -56,7 +66,7 @@ describe('RemindersList (admin)', () => {
   })
 
   it('shows error alert if error prop is set', () => {
-    render(<RemindersList reminders={mockReminders} error={'Test error'} onRemindersSent={jest.fn()} />)
+    renderWithI18n(<RemindersList reminders={mockReminders} error={'Test error'} onRemindersSent={jest.fn()} />)
     expect(screen.getByText('Test error')).toBeInTheDocument()
   })
 }) 
