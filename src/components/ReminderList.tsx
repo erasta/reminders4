@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { Reminder, ReminderDataFromDB } from '@/models/Reminder';
 import ReminderRow from './ReminderRow';
+import { useTranslation } from 'react-i18next';
 
 type ReminderListProps = {
   reminders: ReminderDataFromDB[]; // Use ReminderDataFromDB[] instead of any[]
@@ -23,6 +24,7 @@ type ReminderListProps = {
 
 export default function ReminderList({ reminders: rawReminders, onEditReminder, onDeleteReminder, onError }: ReminderListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   // Convert raw reminder data to Reminder instances and sort by due date
   const reminders = useMemo(() => 
@@ -46,13 +48,13 @@ export default function ReminderList({ reminders: rawReminders, onEditReminder, 
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete reminder');
+        throw new Error(t('reminders.deleteError'));
       }
 
       onDeleteReminder(reminderId);
     } catch (error) {
       console.error('Error deleting reminder:', error);
-      onError('Failed to delete reminder');
+      onError(t('reminders.deleteError'));
     } finally {
       setDeletingId(null);
     }
@@ -61,7 +63,7 @@ export default function ReminderList({ reminders: rawReminders, onEditReminder, 
   if (reminders.length === 0) {
     return (
       <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-        No reminders found. Add your first reminder above.
+        {t('reminders.noReminders')}
       </Typography>
     );
   }
@@ -71,13 +73,13 @@ export default function ReminderList({ reminders: rawReminders, onEditReminder, 
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Company</TableCell>
-            <TableCell>User ID</TableCell>
-            <TableCell>Days Between</TableCell>
-            <TableCell>Last Reminder</TableCell>
-            <TableCell>Next Due Date</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Actions</TableCell>
+            <TableCell>{t('reminders.company')}</TableCell>
+            <TableCell>{t('reminders.companyUser')}</TableCell>
+            <TableCell>{t('reminders.daysBetweenReminders')}</TableCell>
+            <TableCell>{t('reminders.lastReminderDate')}</TableCell>
+            <TableCell>{t('reminders.nextDueDate')}</TableCell>
+            <TableCell>{t('reminders.status')}</TableCell>
+            <TableCell>{t('common.actions')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

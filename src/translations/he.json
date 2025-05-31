@@ -40,6 +40,7 @@
     "updateError": "שגיאה בעדכון התזכורת",
     "createError": "שגיאה ביצירת התזכורת",
     "saveError": "שגיאה בשמירת התזכורת",
+    "deleteError": "שגיאה במחיקת התזכורת",
     "fetchCompaniesError": "שגיאה בטעינת החברות",
     "fetchRemindersError": "שגיאה בטעינת התזכורות",
     "fetchError": "שגיאה בטעינת הנתונים",
