@@ -3,6 +3,7 @@
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import LoginButton from './LoginButton';
 import AdminButton from './AdminButton';
+import LanguageSwitcher from './LanguageSwitcher';
 import { useSession } from 'next-auth/react';
 
 export default function AppHeader() {
@@ -29,6 +30,7 @@ export default function AppHeader() {
               </Box>
             </Box>
           )}
+          <LanguageSwitcher />
           <AdminButton />
           <LoginButton />
         </Box>
