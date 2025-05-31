@@ -1,6 +1,6 @@
 'use client';
 
-import { AppBar, Toolbar, Typography, Box, IconButton, Tooltip } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, Tooltip } from '@mui/material';
 import LoginButton from './LoginButton';
 import AdminButton from './AdminButton';
 import LanguageSwitcher from './LanguageSwitcher';

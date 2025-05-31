@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import {
   Box,
   TextField,
@@ -32,7 +31,6 @@ export default function AddReminder({
   editingReminder,
   onCancel 
 }: AddReminderProps) {
-  const { data: session } = useSession();
   const { t } = useTranslation();
   const [companyId, setCompanyId] = useState(editingReminder?.companyId || '');
   const [companyUserId, setCompanyUserId] = useState(editingReminder?.companyUserId || '');
