@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { Button } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import TranslateIcon from '@mui/icons-material/Translate';
 
 const LanguageSwitcher = () => {
@@ -14,14 +14,16 @@ const LanguageSwitcher = () => {
   };
 
   return (
-    <Button
-      variant="outlined"
-      color="inherit"
-      onClick={toggleLanguage}
-      startIcon={<TranslateIcon />}
-    >
-      {i18n.language === 'en' ? 'עברית' : 'English'}
-    </Button>
+    <Tooltip title={i18n.language === 'en' ? 'Switch to Hebrew' : 'עבור לאנגלית'} arrow>
+      <IconButton
+        color="inherit"
+        onClick={toggleLanguage}
+        size="small"
+        sx={{ direction: 'ltr' }}
+      >
+        <TranslateIcon />
+      </IconButton>
+    </Tooltip>
   );
 };
 

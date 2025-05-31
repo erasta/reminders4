@@ -1,6 +1,6 @@
 'use client';
 
-import { AppBar, Toolbar, Typography, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, IconButton, Tooltip } from '@mui/material';
 import LoginButton from './LoginButton';
 import AdminButton from './AdminButton';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -15,26 +15,51 @@ export default function AppHeader() {
 
   return (
     <AppBar position="static">
-      <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+      <Toolbar sx={{ position: 'relative' }}>
+        {/* Centered title */}
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            flex: 1,
+            textAlign: 'center'
+          }}
+        >
           {t('common.appName')}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+
+        {/* Right side elements with fixed positions */}
+        <Box 
+          sx={{ 
+            position: 'absolute', 
+            right: 16, 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            flexDirection: 'row',
+            direction: 'ltr',
+            unicodeBidi: 'isolate',
+            alignItems: 'center'
+          }}
+        >
           {session && (
-            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-              <Box>
-                <Typography variant="body1" sx={{ fontWeight: 'medium', lineHeight: 1.2 }}>
+            <Box component="span" sx={{ mr: 2, display: 'inline-flex', alignItems: 'center' }}>
+              <Tooltip title={`${userName}\n${userEmail}`} arrow placement="bottom">
+                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
                   {userName}
                 </Typography>
-                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
-                  {userEmail}
-                </Typography>
-              </Box>
+              </Tooltip>
             </Box>
           )}
-          <LanguageSwitcher />
-          <AdminButton />
-          <LoginButton />
+          <Box component="span" sx={{ mr: 1, display: 'inline-block' }}>
+            <LanguageSwitcher />
+          </Box>
+          <Box component="span" sx={{ mr: 1, display: 'inline-block' }}>
+            <AdminButton />
+          </Box>
+          <Box component="span" sx={{ display: 'inline-block' }}>
+            <LoginButton />
+          </Box>
         </Box>
       </Toolbar>
     </AppBar>
